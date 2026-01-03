@@ -1,0 +1,2 @@
+# PokeBase-web
+PokeBaseアプリのクライアント
