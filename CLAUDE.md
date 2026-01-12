@@ -92,20 +92,17 @@ src/
 
 ## Pokemon Data Management
 
-ポケモンデータ（第1-9世代、1025匹）は `public/data/pokemon.json` に保存されています。
+ポケモンデータ（第1-9世代、1025匹）は `public/data/pokemon.json` に保存されます。
 
-### 初回セットアップまたはデータ更新時
+### データ取得について
 
-```bash
-npm run fetch-pokemon
-```
-
-このコマンドはPokeAPIから全ポケモンデータを取得します（約3-4分かかります）。
+- **ビルド時**: `npm run build` を実行すると、自動的に `prebuild` スクリプトが実行され、PokeAPIから全ポケモンデータを取得します（約3-4分）
+- **手動取得**: `npm run fetch-pokemon` で明示的にデータを取得できます
 
 **重要**:
-- `pokemon.json`はGitにコミットしてください
-- ビルド時にはAPIを呼ばず、既存ファイルを使用します
-- これによりデプロイが高速化され、安定します
+- `pokemon.json` は `.gitignore` に含まれており、Gitリポジトリには含まれません（237MB以上でGitHubの制限を超えるため）
+- デプロイ時には毎回PokeAPIからデータを取得します
+- ローカル開発では一度取得すればキャッシュされます
 
 ## Deployment
 
@@ -115,4 +112,6 @@ This project can be deployed to Vercel:
 npx vercel
 ```
 
-**注意**: デプロイ前に `pokemon.json` がリポジトリにコミットされていることを確認してください。
+**注意**:
+- 初回デプロイ時、ビルドに3-4分程度かかります（ポケモンデータ取得のため）
+- Vercelのビルドタイムアウト（10分）内に完了します
