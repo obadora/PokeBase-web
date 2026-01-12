@@ -12,10 +12,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // 初期ユーザー状態を取得
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      setLoading(false);
-    });
+    supabase.auth
+      .getUser()
+      .then(({ data: { user } }) => {
+        setUser(user);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('認証エラー:', error);
+        setLoading(false);
+      });
 
     // 認証状態の変更を監視
     const {
