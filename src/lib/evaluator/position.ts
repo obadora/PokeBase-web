@@ -20,15 +20,25 @@ export function calculatePositionScore(
 ): number {
   const weights = POSITION_WEIGHTS[position];
 
-  let score = 0;
+  let weightedSum = 0;
+  let totalWeight = 0;
+
   for (const [key, weight] of Object.entries(weights)) {
     const value = ability[key as keyof typeof ability];
     if (typeof value === "number" && typeof weight === "number") {
-      score += value * weight;
+      weightedSum += value * weight;
+      totalWeight += weight;
     }
   }
 
-  return Math.round(score);
+  // 重み付き平均を計算
+  const rawScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
+
+  // スコアを1.5倍にブースト（より高いスコアを得やすくする）
+  // ただし100を超えないようにキャップ
+  const boostedScore = Math.min(rawScore * 1.5, 100);
+
+  return Math.round(boostedScore);
 }
 
 /**
@@ -48,7 +58,9 @@ export function evaluatePositions(
     "second",
     "third",
     "short",
-    "outfield",
+    "left",
+    "center",
+    "right",
   ];
 
   const fitness: PositionFitness[] = positions.map((position) => {
@@ -58,7 +70,7 @@ export function evaluatePositions(
     return {
       position,
       score,
-      stars: convertToStars(score),
+      stars: 0, // 後で設定
       rank: 0, // 後で設定
     };
   });
@@ -66,9 +78,22 @@ export function evaluatePositions(
   // スコア降順でソート
   fitness.sort((a, b) => b.score - a.score);
 
-  // 順位を設定
+  // 順位を設定し、スコアの絶対値に基づいて星を設定
   fitness.forEach((item, index) => {
     item.rank = index + 1;
+
+    // スコアの絶対値に基づいて星を設定
+    if (item.score >= 80) {
+      item.stars = 5; // ⭐⭐⭐⭐⭐: 80点以上
+    } else if (item.score >= 60) {
+      item.stars = 4; // ⭐⭐⭐⭐: 60-79点
+    } else if (item.score >= 40) {
+      item.stars = 3; // ⭐⭐⭐: 40-59点
+    } else if (item.score >= 20) {
+      item.stars = 2; // ⭐⭐: 20-39点
+    } else {
+      item.stars = 1; // ⭐: 0-19点
+    }
   });
 
   return fitness;

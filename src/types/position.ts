@@ -10,14 +10,16 @@ export type Position =
   | "second" // 二塁手
   | "third" // 三塁手
   | "short" // 遊撃手
-  | "outfield"; // 外野手
+  | "left" // 左翼手
+  | "center" // 中堅手
+  | "right"; // 右翼手
 
 /** ポジション適性型 */
 export interface PositionFitness {
   position: Position; // ポジション
   score: number; // 適性スコア(0-100)
   stars: number; // 星の数(1-5)
-  rank: number; // 順位(1-7)
+  rank: number; // 順位(1-9)
 }
 
 /** ポジション日本語名マッピング */
@@ -28,7 +30,9 @@ export const POSITION_NAMES_JA: Record<Position, string> = {
   second: "二塁手",
   third: "三塁手",
   short: "遊撃手",
-  outfield: "外野手",
+  left: "左翼手",
+  center: "中堅手",
+  right: "右翼手",
 };
 
 /** ポジション英語名マッピング */
@@ -39,5 +43,7 @@ export const POSITION_NAMES_EN: Record<Position, string> = {
   second: "Second Base",
   third: "Third Base",
   short: "Shortstop",
-  outfield: "Outfield",
+  left: "Left Field",
+  center: "Center Field",
+  right: "Right Field",
 };

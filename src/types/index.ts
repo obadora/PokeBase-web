@@ -8,6 +8,50 @@ export type PokemonTypeInfo = {
   typeName: string; // 'grass', 'fire', etc.
 };
 
+/** タイプの日本語名マッピング */
+export const TYPE_NAMES_JA: Record<string, string> = {
+  normal: "ノーマル",
+  fire: "ほのお",
+  water: "みず",
+  electric: "でんき",
+  grass: "くさ",
+  ice: "こおり",
+  fighting: "かくとう",
+  poison: "どく",
+  ground: "じめん",
+  flying: "ひこう",
+  psychic: "エスパー",
+  bug: "むし",
+  rock: "いわ",
+  ghost: "ゴースト",
+  dragon: "ドラゴン",
+  dark: "あく",
+  steel: "はがね",
+  fairy: "フェアリー",
+};
+
+/** タイプの色マッピング（HEXカラー） */
+export const TYPE_COLORS: Record<string, string> = {
+  normal: "#9CA3AF",
+  fire: "#F97316",
+  water: "#3B82F6",
+  electric: "#FACC15",
+  grass: "#22C55E",
+  ice: "#22D3EE",
+  fighting: "#DC2626",
+  poison: "#A855F7",
+  ground: "#CA8A04",
+  flying: "#818CF8",
+  psychic: "#EC4899",
+  bug: "#84CC16",
+  rock: "#A16207",
+  ghost: "#7C3AED",
+  dragon: "#4F46E5",
+  dark: "#374151",
+  steel: "#6B7280",
+  fairy: "#F9A8D4",
+};
+
 /** ポケモンのステータス */
 export type PokemonStats = {
   hp: number;
