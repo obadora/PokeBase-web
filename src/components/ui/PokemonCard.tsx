@@ -7,6 +7,7 @@
 
 import Image from "next/image";
 import type { Pokemon } from "@/types";
+import { TYPE_NAMES_JA, TYPE_COLORS } from "@/types";
 
 interface PokemonCardProps {
   pokemon: Pokemon;
@@ -48,9 +49,10 @@ export function PokemonCard({ pokemon }: PokemonCardProps) {
               {pokemon.types.map((t) => (
                 <span
                   key={t.slot}
-                  className="px-4 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full text-sm font-semibold"
+                  className="px-4 py-1 text-white rounded-full text-sm font-semibold shadow-md"
+                  style={{ backgroundColor: TYPE_COLORS[t.typeName] || "#9CA3AF" }}
                 >
-                  {t.typeName}
+                  {TYPE_NAMES_JA[t.typeName] || t.typeName}
                 </span>
               ))}
             </div>

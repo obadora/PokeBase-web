@@ -44,14 +44,18 @@ export function PositionRanking({ positions }: PositionRankingProps) {
               <div className="text-right">
                 <p className="text-3xl font-bold text-gray-800">{position.score}</p>
                 <div className="flex gap-0.5">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <span
-                      key={i}
-                      className={i < position.stars ? "text-yellow-500" : "text-gray-300"}
-                    >
-                      ⭐
-                    </span>
-                  ))}
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const isActive = i < position.stars;
+                    return (
+                      <span
+                        key={i}
+                        className="text-2xl"
+                        style={{ opacity: isActive ? 1 : 0.2 }}
+                      >
+                        ⭐
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>

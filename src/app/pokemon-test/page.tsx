@@ -230,6 +230,21 @@ export default function PokemonTestPage() {
                   <p className="text-2xl font-bold">{selectedPokemon.stats.speed}</p>
                 </div>
               </div>
+
+              {/* 合計種族値 */}
+              <div className="mt-6 pt-6 border-t">
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-500 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 mb-1">合計種族値</p>
+                  <p className="text-4xl font-bold text-green-700">
+                    {selectedPokemon.stats.hp +
+                      selectedPokemon.stats.attack +
+                      selectedPokemon.stats.defense +
+                      selectedPokemon.stats.specialAttack +
+                      selectedPokemon.stats.specialDefense +
+                      selectedPokemon.stats.speed}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
