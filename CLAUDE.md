@@ -56,9 +56,15 @@ Two issue templates are available:
 | `npm run dev` | 開発サーバーを起動 (http://localhost:3000) |
 | `npm run build` | 本番用ビルドを作成 |
 | `npm start` | 本番サーバーを起動 |
+| `npm test` | Jestでテストを実行 |
+| `npm run test:watch` | ウォッチモードでテストを実行 |
+| `npm run test:coverage` | カバレッジレポート付きでテストを実行 |
 | `npm run lint` | ESLintでコードをチェック |
+| `npm run type-check` | TypeScriptの型チェックを実行 |
 | `npm run format` | Prettierでコードをフォーマット |
 | `npm run format:check` | フォーマットをチェック（変更なし） |
+| `npm run validate` | type-check + lint + format:checkをまとめて実行 |
+| `npm run fetch-pokemon` | PokeAPIから全ポケモンデータ（1-1025匹）を取得 |
 
 ## Project Structure
 
@@ -79,7 +85,34 @@ src/
 
 - Use TypeScript strict mode
 - Follow ESLint rules (next/core-web-vitals, next/typescript)
-- Format code with Prettier before committing
+- Format code with Prettier before committing (settings in `.prettierrc.json`)
 - Use `@/` path alias for imports (e.g., `import { Pokemon } from "@/types"`)
 - The root layout sets `lang="ja"` for Japanese content
 - All React Server Components by default (use `"use client"` directive when needed)
+
+## Pokemon Data Management
+
+ポケモンデータ（第1-9世代、1025匹）は `public/data/pokemon.json` に保存されています。
+
+### 初回セットアップまたはデータ更新時
+
+```bash
+npm run fetch-pokemon
+```
+
+このコマンドはPokeAPIから全ポケモンデータを取得します（約3-4分かかります）。
+
+**重要**:
+- `pokemon.json`はGitにコミットしてください
+- ビルド時にはAPIを呼ばず、既存ファイルを使用します
+- これによりデプロイが高速化され、安定します
+
+## Deployment
+
+This project can be deployed to Vercel:
+
+```bash
+npx vercel
+```
+
+**注意**: デプロイ前に `pokemon.json` がリポジトリにコミットされていることを確認してください。
