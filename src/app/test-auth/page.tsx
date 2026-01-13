@@ -11,12 +11,26 @@ export default function TestAuthPage() {
 
   const testConnection = async () => {
     try {
-      const { error } = await supabase.from('users').select('count');
+      console.log('[Test] Supabase接続テスト開始');
+      const { data, error } = await supabase.from('users').select('count');
+      console.log('[Test] レスポンス:', { data, error });
       if (error) throw error;
       alert('Supabase接続成功！\nusersテーブルにアクセスできました。');
     } catch (error) {
-      console.error('接続エラー:', error);
-      alert('接続エラー: ' + (error as Error).message);
+      console.error('[Test] 接続エラー詳細:', {
+        error,
+        message: (error as any)?.message,
+        code: (error as any)?.code,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint,
+        stack: (error as any)?.stack,
+      });
+      alert(
+        '接続エラー:\n' +
+          `メッセージ: ${(error as any)?.message}\n` +
+          `コード: ${(error as any)?.code}\n` +
+          `詳細: ${(error as any)?.details}`
+      );
     }
   };
 
