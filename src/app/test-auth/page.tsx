@@ -17,19 +17,24 @@ export default function TestAuthPage() {
       if (error) throw error;
       alert('Supabase接続成功！\nusersテーブルにアクセスできました。');
     } catch (error) {
+      const err = error as Error & {
+        code?: string;
+        details?: string;
+        hint?: string;
+      };
       console.error('[Test] 接続エラー詳細:', {
         error,
-        message: (error as any)?.message,
-        code: (error as any)?.code,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint,
-        stack: (error as any)?.stack,
+        message: err.message,
+        code: err.code,
+        details: err.details,
+        hint: err.hint,
+        stack: err.stack,
       });
       alert(
         '接続エラー:\n' +
-          `メッセージ: ${(error as any)?.message}\n` +
-          `コード: ${(error as any)?.code}\n` +
-          `詳細: ${(error as any)?.details}`
+          `メッセージ: ${err.message}\n` +
+          `コード: ${err.code || 'なし'}\n` +
+          `詳細: ${err.details || 'なし'}`
       );
     }
   };
