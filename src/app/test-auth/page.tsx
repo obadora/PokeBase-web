@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useAuthStore } from '@/store/auth';
-import { supabase } from '@/lib/supabase/client';
+import { useAuthStore } from "@/store/auth";
+import { supabase } from "@/lib/supabase/client";
 
 /**
  * Sprint 11: 環境構築の動作確認用ページ
@@ -11,12 +11,12 @@ export default function TestAuthPage() {
 
   const testConnection = async () => {
     try {
-      const { error } = await supabase.from('users').select('count');
+      const { error } = await supabase.from("users").select("count");
       if (error) throw error;
-      alert('Supabase接続成功！\nusersテーブルにアクセスできました。');
+      alert("Supabase接続成功！\nusersテーブルにアクセスできました。");
     } catch (error) {
-      console.error('接続エラー:', error);
-      alert('接続エラー: ' + (error as Error).message);
+      console.error("接続エラー:", error);
+      alert("接続エラー: " + (error as Error).message);
     }
   };
 
@@ -33,17 +33,14 @@ export default function TestAuthPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold">Sprint 11: 環境構築テスト</h1>
-          <p className="mt-2 text-gray-600">
-            Supabase、Zustand、Framer Motionの動作確認
-          </p>
+          <p className="mt-2 text-gray-600">Supabase、Zustand、Framer Motionの動作確認</p>
         </div>
 
         <div className="rounded-lg border border-gray-300 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold">認証状態</h2>
           <div className="space-y-2">
             <p>
-              <strong>ログイン状態:</strong>{' '}
-              {user ? 'ログイン済み' : '未ログイン'}
+              <strong>ログイン状態:</strong> {user ? "ログイン済み" : "未ログイン"}
             </p>
             {user && (
               <>
@@ -69,9 +66,7 @@ export default function TestAuthPage() {
         </div>
 
         <div className="rounded-lg border border-green-300 bg-green-50 p-6">
-          <h2 className="mb-4 text-xl font-semibold text-green-800">
-            ✅ 完了した項目
-          </h2>
+          <h2 className="mb-4 text-xl font-semibold text-green-800">✅ 完了した項目</h2>
           <ul className="space-y-2 text-sm text-green-700">
             <li>✓ Supabaseプロジェクト作成</li>
             <li>✓ データベーステーブル作成</li>
@@ -84,7 +79,7 @@ export default function TestAuthPage() {
 
         <div className="text-center">
           <button
-            onClick={() => window.location.href = '/'}
+            onClick={() => (window.location.href = "/")}
             className="text-blue-600 hover:underline"
           >
             ← ホームに戻る

@@ -47,11 +47,7 @@ export function PositionRanking({ positions }: PositionRankingProps) {
                   {Array.from({ length: 5 }, (_, i) => {
                     const isActive = i < position.stars;
                     return (
-                      <span
-                        key={i}
-                        className="text-2xl"
-                        style={{ opacity: isActive ? 1 : 0.2 }}
-                      >
+                      <span key={i} className="text-2xl" style={{ opacity: isActive ? 1 : 0.2 }}>
                         ⭐
                       </span>
                     );

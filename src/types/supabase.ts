@@ -3,13 +3,7 @@
  * テーブル作成後に自動生成される型を手動で定義
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface Database {
   public: {
@@ -90,24 +84,24 @@ export interface Database {
         Row: {
           id: string;
           team_id: string;
-          tournament_type: 'district' | 'regional' | 'national';
-          status: 'in_progress' | 'completed' | 'failed';
+          tournament_type: "district" | "regional" | "national";
+          status: "in_progress" | "completed" | "failed";
           current_round: number;
           created_at: string;
         };
         Insert: {
           id?: string;
           team_id: string;
-          tournament_type: 'district' | 'regional' | 'national';
-          status?: 'in_progress' | 'completed' | 'failed';
+          tournament_type: "district" | "regional" | "national";
+          status?: "in_progress" | "completed" | "failed";
           current_round?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           team_id?: string;
-          tournament_type?: 'district' | 'regional' | 'national';
-          status?: 'in_progress' | 'completed' | 'failed';
+          tournament_type?: "district" | "regional" | "national";
+          status?: "in_progress" | "completed" | "failed";
           current_round?: number;
           created_at?: string;
         };
@@ -117,7 +111,7 @@ export interface Database {
           id: string;
           tournament_id: string;
           opponent_name: string;
-          result: 'win' | 'lose';
+          result: "win" | "lose";
           score: string;
           date: string;
         };
@@ -125,7 +119,7 @@ export interface Database {
           id?: string;
           tournament_id: string;
           opponent_name: string;
-          result: 'win' | 'lose';
+          result: "win" | "lose";
           score: string;
           date?: string;
         };
@@ -133,7 +127,7 @@ export interface Database {
           id?: string;
           tournament_id?: string;
           opponent_name?: string;
-          result?: 'win' | 'lose';
+          result?: "win" | "lose";
           score?: string;
           date?: string;
         };

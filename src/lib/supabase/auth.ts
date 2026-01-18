@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase } from "./client";
 
 /**
  * メールアドレスとパスワードでサインアップ
@@ -15,18 +15,6 @@ export async function signUp(email: string, password: string, displayName?: stri
   });
 
   if (error) throw error;
-
-  // usersテーブルにプロフィールを作成
-  if (data.user) {
-    const { error: profileError } = await supabase.from('users').insert({
-      id: data.user.id,
-      email: data.user.email!,
-      display_name: displayName || null,
-    });
-
-    if (profileError) throw profileError;
-  }
-
   return data;
 }
 
@@ -64,11 +52,7 @@ export async function getCurrentUser() {
  * ユーザープロフィールを取得
  */
 export async function getUserProfile(userId: string) {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', userId)
-    .single();
+  const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
 
   if (error) throw error;
   return data;
@@ -77,17 +61,13 @@ export async function getUserProfile(userId: string) {
 /**
  * ユーザープロフィールを更新
  */
-export async function updateUserProfile(
-  userId: string,
-  updates: { display_name?: string }
-) {
+export async function updateUserProfile(userId: string, updates: { display_name?: string }) {
   const { data, error } = await supabase
-    .from('users')
+    .from("users")
     .update(updates)
-    .eq('id', userId)
-    .select()
-    .single();
+    .eq("id", userId)
+    .select();
 
   if (error) throw error;
-  return data;
+  return data && data.length > 0 ? data[0] : null;
 }
