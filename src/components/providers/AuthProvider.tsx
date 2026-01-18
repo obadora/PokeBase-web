@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { useAuthStore } from '@/store/auth';
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { useAuthStore } from "@/store/auth";
 
 /**
  * 認証状態を監視し、Zustandストアに同期するプロバイダー
@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       })
       .catch((error) => {
-        console.error('認証エラー:', error);
+        console.error("認証エラー:", error);
         setLoading(false);
       });
 

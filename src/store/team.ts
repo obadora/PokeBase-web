@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface Team {
   id: string;
@@ -36,8 +36,7 @@ export const useTeamStore = create<TeamState>((set) => ({
   members: [],
   setCurrentTeam: (team) => set({ currentTeam: team }),
   setMembers: (members) => set({ members }),
-  addMember: (member) =>
-    set((state) => ({ members: [...state.members, member] })),
+  addMember: (member) => set((state) => ({ members: [...state.members, member] })),
   updateMember: (id, updates) =>
     set((state) => ({
       members: state.members.map((m) => (m.id === id ? { ...m, ...updates } : m)),

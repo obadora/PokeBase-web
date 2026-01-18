@@ -1,10 +1,10 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface Tournament {
   id: string;
   team_id: string;
-  tournament_type: 'district' | 'regional' | 'national';
-  status: 'in_progress' | 'completed' | 'failed';
+  tournament_type: "district" | "regional" | "national";
+  status: "in_progress" | "completed" | "failed";
   current_round: number;
   created_at: string;
 }
@@ -13,7 +13,7 @@ interface Match {
   id: string;
   tournament_id: string;
   opponent_name: string;
-  result: 'win' | 'lose';
+  result: "win" | "lose";
   score: string;
   date: string;
 }
@@ -34,6 +34,5 @@ export const useTournamentStore = create<TournamentState>((set) => ({
   matches: [],
   setCurrentTournament: (tournament) => set({ currentTournament: tournament }),
   setMatches: (matches) => set({ matches }),
-  addMatch: (match) =>
-    set((state) => ({ matches: [...state.matches, match] })),
+  addMatch: (match) => set((state) => ({ matches: [...state.matches, match] })),
 }));
