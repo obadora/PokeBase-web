@@ -15,13 +15,21 @@ export default function Home() {
         {loading ? (
           <div>読み込み中...</div>
         ) : user ? (
-          <div className="flex gap-4">
-            <Link
-              href="/profile"
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all"
-            >
-              ⚾ プロフィール
-            </Link>
+          <div className="flex flex-col gap-4 items-center">
+            <div className="flex gap-4">
+              <Link
+                href="/profile"
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all"
+              >
+                プロフィール
+              </Link>
+              <Link
+                href="/team/create"
+                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all"
+              >
+                チーム作成
+              </Link>
+            </div>
             <Link
               href="/pokemon-test"
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all"
@@ -30,18 +38,26 @@ export default function Home() {
             </Link>
           </div>
         ) : (
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-4 items-center">
+            <div className="flex gap-4">
+              <Link
+                href="/login"
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all"
+              >
+                ログイン
+              </Link>
+              <Link
+                href="/signup"
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all"
+              >
+                新規登録
+              </Link>
+            </div>
             <Link
-              href="/login"
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all"
+              href="/team/create"
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all"
             >
-              ⚾ ログイン
-            </Link>
-            <Link
-              href="/signup"
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all"
-            >
-              新規登録
+              チーム作成（ログイン不要で閲覧）
             </Link>
           </div>
         )}

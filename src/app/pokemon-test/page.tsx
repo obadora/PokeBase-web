@@ -6,8 +6,8 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
 import { getAllPokemon } from "@/lib/services/pokemon-data";
-import { clearPokemonCache } from "@/lib/storage/pokemon-cache";
 import { calculateFielderAbility } from "@/lib/calculator/fielder";
 import { calculatePitcherAbility } from "@/lib/calculator/pitcher";
 import { getTopPositions } from "@/lib/evaluator/position";
@@ -56,12 +56,6 @@ export default function PokemonTestPage() {
     if (pokemonList.length === 0) return;
     const randomIndex = Math.floor(Math.random() * pokemonList.length);
     setSelectedPokemon(pokemonList[randomIndex]);
-  }
-
-  // キャッシュクリア
-  function handleClearCache() {
-    clearPokemonCache();
-    alert("キャッシュをクリアしました。ページをリロードしてください。");
   }
 
   // 野手能力を計算（メモ化）
@@ -126,10 +120,29 @@ export default function PokemonTestPage() {
       {/* ヘッダー */}
       <header className="bg-green-600 text-white py-6 shadow-lg">
         <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-4xl font-bold text-center">⚾ PokeBase 野球能力診断 ⚾</h1>
-          <p className="text-center mt-2 text-green-100">
-            ポケモンの種族値から野球選手としての能力を診断！
-          </p>
+          <div className="flex items-center justify-between">
+            <Link
+              href="/"
+              className="flex items-center gap-2 px-3 py-2 bg-green-700 hover:bg-green-800 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              <span className="text-sm font-medium">トップへ</span>
+            </Link>
+            <div className="flex-1 text-center">
+              <h1 className="text-3xl md:text-4xl font-bold">PokeBase 野球能力診断</h1>
+              <p className="mt-1 text-green-100 text-sm">
+                ポケモンの種族値から野球選手としての能力を診断！
+              </p>
+            </div>
+            <div className="w-24" /> {/* バランス用スペーサー */}
+          </div>
         </div>
       </header>
 
@@ -144,17 +157,11 @@ export default function PokemonTestPage() {
           />
         </div>
 
-        {/* デバッグボタン */}
-        <div className="mb-8 flex justify-center gap-4">
+        {/* ステータス表示 */}
+        <div className="mb-8 flex justify-center">
           <div className="bg-blue-100 px-4 py-2 rounded">
             <p className="text-sm font-semibold">取得済み: {pokemonList.length} / 1025匹</p>
           </div>
-          <button
-            onClick={handleClearCache}
-            className="px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
-          >
-            キャッシュクリア
-          </button>
         </div>
 
         {/* ポケモン選択前の状態 */}
