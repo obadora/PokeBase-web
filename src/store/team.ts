@@ -1,31 +1,19 @@
 import { create } from "zustand";
-
-interface Team {
-  id: string;
-  user_id: string;
-  team_name: string;
-  reputation: number;
-  created_at: string;
-  updated_at: string;
-}
-
-interface TeamMember {
-  id: string;
-  team_id: string;
-  pokemon_id: number;
-  position: string;
-  is_starter: boolean;
-  join_date: string;
-}
+import type { Team, TeamMember } from "@/types/team";
 
 interface TeamState {
   currentTeam: Team | null;
   members: TeamMember[];
+  isLoading: boolean;
+  error: string | null;
   setCurrentTeam: (team: Team | null) => void;
   setMembers: (members: TeamMember[]) => void;
   addMember: (member: TeamMember) => void;
   updateMember: (id: string, updates: Partial<TeamMember>) => void;
   removeMember: (id: string) => void;
+  setLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearTeam: () => void;
 }
 
 /**
@@ -34,6 +22,8 @@ interface TeamState {
 export const useTeamStore = create<TeamState>((set) => ({
   currentTeam: null,
   members: [],
+  isLoading: false,
+  error: null,
   setCurrentTeam: (team) => set({ currentTeam: team }),
   setMembers: (members) => set({ members }),
   addMember: (member) => set((state) => ({ members: [...state.members, member] })),
@@ -45,4 +35,7 @@ export const useTeamStore = create<TeamState>((set) => ({
     set((state) => ({
       members: state.members.filter((m) => m.id !== id),
     })),
+  setLoading: (isLoading) => set({ isLoading }),
+  setError: (error) => set({ error }),
+  clearTeam: () => set({ currentTeam: null, members: [], error: null }),
 }));

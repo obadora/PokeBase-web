@@ -64,7 +64,7 @@ Two issue templates are available:
 | `npm run format` | Prettierでコードをフォーマット |
 | `npm run format:check` | フォーマットをチェック（変更なし） |
 | `npm run validate` | type-check + lint + format:checkをまとめて実行 |
-| `npm run fetch-pokemon` | PokeAPIから全ポケモンデータ（1-1025匹）を取得 |
+| `npm run seed-pokemon` | PokeAPIからデータを取得しSupabaseに投入（初回のみ） |
 
 ## Project Structure
 
@@ -92,17 +92,41 @@ src/
 
 ## Pokemon Data Management
 
-ポケモンデータ（第1-9世代、1025匹）は `public/data/pokemon.json` に保存されます。
+ポケモンデータ（第1-9世代、1025匹）はSupabaseデータベースに保存されます。
 
-### データ取得について
+### データベース構成
 
-- **ビルド時**: `npm run build` を実行すると、自動的に `prebuild` スクリプトが実行され、PokeAPIから全ポケモンデータを取得します（約3-4分）
-- **手動取得**: `npm run fetch-pokemon` で明示的にデータを取得できます
+正規化されたテーブル設計:
+- `pokemon` - 基本情報（ID、名前、身長、体重など）
+- `pokemon_stats` - 種族値（HP、攻撃、防御など）
+- `pokemon_types` - タイプ情報
+- `pokemon_abilities` - 特性情報
+- `pokemon_sprites` - 画像URL
+- `pokemon_full` - 上記を結合したビュー
 
-**重要**:
-- `pokemon.json` は `.gitignore` に含まれており、Gitリポジトリには含まれません（237MB以上でGitHubの制限を超えるため）
-- デプロイ時には毎回PokeAPIからデータを取得します
-- ローカル開発では一度取得すればキャッシュされます
+### 初期セットアップ
+
+1. Supabaseでマイグレーションを実行:
+   ```bash
+   supabase db push
+   ```
+
+2. ポケモンデータを投入（初回のみ、約4-5分）:
+   ```bash
+   SUPABASE_URL=xxx SUPABASE_SERVICE_ROLE_KEY=xxx npm run seed-pokemon
+   ```
+
+### データフロー
+
+1. クライアントがポケモンデータを要求
+2. localStorageキャッシュをチェック（7日間有効）
+3. キャッシュがない場合、Supabaseから取得
+4. 取得したデータをlocalStorageにキャッシュ
+
+**メリット**:
+- ビルド時間が大幅短縮（PokeAPI取得が不要）
+- デプロイのたびにデータ取得する必要がない
+- 将来的な機能拡張（検索、フィルタリング）が容易
 
 ## Deployment
 
@@ -113,5 +137,5 @@ npx vercel
 ```
 
 **注意**:
-- 初回デプロイ時、ビルドに3-4分程度かかります（ポケモンデータ取得のため）
-- Vercelのビルドタイムアウト（10分）内に完了します
+- 事前にSupabaseにポケモンデータを投入しておく必要があります
+- 環境変数 `NEXT_PUBLIC_SUPABASE_URL` と `NEXT_PUBLIC_SUPABASE_ANON_KEY` を設定してください
