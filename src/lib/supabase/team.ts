@@ -243,3 +243,53 @@ export async function deleteTeam(
 
   return { success: true, error: null };
 }
+
+/**
+ * チームメンバーのポジションとスタメン状態を一括更新する
+ * @param updates 更新データの配列
+ * @returns 成功したかどうか
+ */
+export async function updateTeamMembersBatch(
+  updates: { memberId: string; position: Position; isStarter: boolean }[]
+): Promise<{ success: boolean; error: Error | null }> {
+  // 各メンバーを個別に更新（Supabaseはバッチ更新をサポートしていないため）
+  for (const update of updates) {
+    const { error } = await supabase
+      .from("team_members")
+      .update({
+        position: update.position,
+        is_starter: update.isStarter,
+      })
+      .eq("id", update.memberId);
+
+    if (error) {
+      return { success: false, error: new Error(error.message) };
+    }
+  }
+
+  return { success: true, error: null };
+}
+
+/**
+ * チームメンバーの打順を一括更新する
+ * @param updates 更新データの配列（memberId, battingOrder）
+ * @returns 成功したかどうか
+ */
+export async function updateBattingOrder(
+  updates: { memberId: string; battingOrder: number | null }[]
+): Promise<{ success: boolean; error: Error | null }> {
+  for (const update of updates) {
+    const { error } = await supabase
+      .from("team_members")
+      .update({
+        batting_order: update.battingOrder,
+      })
+      .eq("id", update.memberId);
+
+    if (error) {
+      return { success: false, error: new Error(error.message) };
+    }
+  }
+
+  return { success: true, error: null };
+}

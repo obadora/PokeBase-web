@@ -34,6 +34,7 @@ export interface TeamMember {
   is_starter: boolean;
   join_date: string;
   grade: Grade;
+  batting_order: number | null;
 }
 
 /** ポケモン情報を含むチームメンバー型 */

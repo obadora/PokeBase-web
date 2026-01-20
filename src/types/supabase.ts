@@ -63,6 +63,7 @@ export interface Database {
           is_starter: boolean;
           join_date: string;
           grade: number;
+          batting_order: number | null;
         };
         Insert: {
           id?: string;
@@ -72,6 +73,7 @@ export interface Database {
           is_starter?: boolean;
           join_date?: string;
           grade?: number;
+          batting_order?: number | null;
         };
         Update: {
           id?: string;
@@ -81,6 +83,7 @@ export interface Database {
           is_starter?: boolean;
           join_date?: string;
           grade?: number;
+          batting_order?: number | null;
         };
       };
       tournaments: {

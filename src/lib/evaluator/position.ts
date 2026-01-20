@@ -6,7 +6,6 @@
 import type { Position, PositionFitness } from "@/types/position";
 import type { FielderAbility, PitcherAbility } from "@/types/ability";
 import { POSITION_WEIGHTS } from "@/lib/constants/weights";
-import { convertToStars } from "@/lib/converter/rank";
 
 /**
  * ポジション適性スコアを計算
