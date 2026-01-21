@@ -456,7 +456,7 @@ export default function TeamDetailPage({ params }: TeamDetailPageProps) {
         </div>
 
         {/* アクションボタン */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           <Link
             href={`/team/${teamId}/formation`}
             className="py-3 px-4 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors text-center"
@@ -468,6 +468,12 @@ export default function TeamDetailPage({ params }: TeamDetailPageProps) {
             className="py-3 px-4 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors text-center"
           >
             スカウト
+          </Link>
+          <Link
+            href={`/team/${teamId}/tournament`}
+            className="py-3 px-4 bg-yellow-500 text-white text-sm font-semibold rounded-lg hover:bg-yellow-600 transition-colors text-center"
+          >
+            大会
           </Link>
         </div>
 
