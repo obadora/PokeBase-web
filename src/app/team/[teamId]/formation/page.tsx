@@ -32,15 +32,9 @@ import { MemberAssignmentModal } from "@/components/team/formation/MemberAssignm
 import { calculateFielderAbility, FIELDER_ABILITY_NAMES_JA } from "@/lib/calculator/fielder";
 import { calculatePitcherAbility, PITCHER_ABILITY_NAMES_JA } from "@/lib/calculator/pitcher";
 
-// 能力値の表示用（コンパクト版）
-function AbilityBars({
-  member,
-  compact = false,
-}: {
-  member: TeamMemberWithPokemon;
-  compact?: boolean;
-}) {
-  const isPitcher = member.position === "pitcher";
+// 能力値の表示用（コンパクト版：打順リスト用）
+// 打順では全員野手能力（ミート、パワー、走力、肩、守備）を表示
+function AbilityBarsCompact({ member }: { member: TeamMemberWithPokemon }) {
   const stats = {
     hp: member.pokemon.stats.hp,
     attack: member.pokemon.stats.attack,
@@ -50,57 +44,23 @@ function AbilityBars({
     speed: member.pokemon.stats.speed,
   };
 
-  const abilities = isPitcher
-    ? (() => {
-        const a = calculatePitcherAbility(stats);
-        return [
-          { name: PITCHER_ABILITY_NAMES_JA.velocity, value: a.velocity },
-          { name: PITCHER_ABILITY_NAMES_JA.control, value: a.control },
-          { name: PITCHER_ABILITY_NAMES_JA.stamina, value: a.stamina },
-          { name: PITCHER_ABILITY_NAMES_JA.breaking, value: a.breaking },
-        ];
-      })()
-    : (() => {
-        const a = calculateFielderAbility(stats);
-        return [
-          { name: FIELDER_ABILITY_NAMES_JA.meet, value: a.meet },
-          { name: FIELDER_ABILITY_NAMES_JA.power, value: a.power },
-          { name: FIELDER_ABILITY_NAMES_JA.speed, value: a.speed },
-          { name: FIELDER_ABILITY_NAMES_JA.arm, value: a.arm },
-          { name: FIELDER_ABILITY_NAMES_JA.defense, value: a.defense },
-          { name: FIELDER_ABILITY_NAMES_JA.stamina, value: a.stamina },
-        ];
-      })();
+  const fielderAbility = calculateFielderAbility(stats);
 
-  if (compact) {
-    // コンパクト表示（打順リスト用）
-    const mainAbilities = isPitcher
-      ? abilities.slice(0, 2) // 球速、制球
-      : abilities.slice(0, 3); // ミート、パワー、走力
-    return (
-      <div className="flex gap-1">
-        {mainAbilities.map((ability) => (
-          <div key={ability.name} className="flex items-center gap-0.5">
-            <span className="text-[9px] text-gray-500">{ability.name.slice(0, 2)}</span>
-            <span className="text-[10px] font-semibold text-gray-700">{ability.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  // 打順リストでは全員野手能力5項目を表示（スタミナ除く）
+  const abilities = [
+    { name: "ミ", value: fielderAbility.meet },
+    { name: "パ", value: fielderAbility.power },
+    { name: "走", value: fielderAbility.speed },
+    { name: "肩", value: fielderAbility.arm },
+    { name: "守", value: fielderAbility.defense },
+  ];
 
   return (
-    <div className="space-y-1.5">
+    <div className="flex gap-1">
       {abilities.map((ability) => (
-        <div key={ability.name} className="flex items-center gap-2">
-          <span className="text-xs text-gray-600 w-12">{ability.name}</span>
-          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-green-500 rounded-full transition-all"
-              style={{ width: `${ability.value}%` }}
-            />
-          </div>
-          <span className="text-xs font-semibold text-gray-700 w-6 text-right">{ability.value}</span>
+        <div key={ability.name} className="flex items-center gap-0.5">
+          <span className="text-[9px] text-gray-500">{ability.name}</span>
+          <span className="text-[10px] font-semibold text-gray-700">{ability.value}</span>
         </div>
       ))}
     </div>
@@ -108,6 +68,7 @@ function AbilityBars({
 }
 
 // メンバー詳細モーダル（能力値表示）
+// 投手でも野手能力を表示（打順確認用）
 function MemberDetailModal({
   member,
   onClose,
@@ -117,6 +78,18 @@ function MemberDetailModal({
 }) {
   const modalRef = useRef<HTMLDivElement>(null);
   const isPitcher = member.position === "pitcher";
+
+  const stats = {
+    hp: member.pokemon.stats.hp,
+    attack: member.pokemon.stats.attack,
+    defense: member.pokemon.stats.defense,
+    specialAttack: member.pokemon.stats.specialAttack,
+    specialDefense: member.pokemon.stats.specialDefense,
+    speed: member.pokemon.stats.speed,
+  };
+
+  const pitcherAbility = calculatePitcherAbility(stats);
+  const fielderAbility = calculateFielderAbility(stats);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -143,7 +116,7 @@ function MemberDetailModal({
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 overflow-hidden"
+        className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 overflow-hidden max-h-[90vh] overflow-y-auto"
       >
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-4 border-b bg-gray-50">
@@ -180,12 +153,55 @@ function MemberDetailModal({
           </button>
         </div>
 
-        {/* 能力値 */}
-        <div className="p-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">
-            {isPitcher ? "投手能力" : "野手能力"}
-          </h4>
-          <AbilityBars member={member} />
+        {/* 投手能力（投手のみ） */}
+        {isPitcher && (
+          <div className="p-4">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">投手能力</h4>
+            <div className="space-y-1.5">
+              {[
+                { name: PITCHER_ABILITY_NAMES_JA.velocity, value: pitcherAbility.velocity },
+                { name: PITCHER_ABILITY_NAMES_JA.control, value: pitcherAbility.control },
+                { name: PITCHER_ABILITY_NAMES_JA.stamina, value: pitcherAbility.stamina },
+                { name: PITCHER_ABILITY_NAMES_JA.breaking, value: pitcherAbility.breaking },
+              ].map((ability) => (
+                <div key={ability.name} className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600 w-12">{ability.name}</span>
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full transition-all"
+                      style={{ width: `${ability.value}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700 w-6 text-right">{ability.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 野手能力（全員表示） */}
+        <div className={`p-4 ${isPitcher ? "border-t" : ""}`}>
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">野手能力</h4>
+          <div className="space-y-1.5">
+            {[
+              { name: FIELDER_ABILITY_NAMES_JA.meet, value: fielderAbility.meet },
+              { name: FIELDER_ABILITY_NAMES_JA.power, value: fielderAbility.power },
+              { name: FIELDER_ABILITY_NAMES_JA.speed, value: fielderAbility.speed },
+              { name: FIELDER_ABILITY_NAMES_JA.arm, value: fielderAbility.arm },
+              { name: FIELDER_ABILITY_NAMES_JA.defense, value: fielderAbility.defense },
+            ].map((ability) => (
+              <div key={ability.name} className="flex items-center gap-2">
+                <span className="text-xs text-gray-600 w-12">{ability.name}</span>
+                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 rounded-full transition-all"
+                    style={{ width: `${ability.value}%` }}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-gray-700 w-6 text-right">{ability.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* 種族値 */}
@@ -650,7 +666,7 @@ export default function FormationPage({ params }: FormationPageProps) {
                         <span className="text-xs text-gray-500">
                           {POSITION_NAMES_JA[member.position as Position]}
                         </span>
-                        <AbilityBars member={member} compact />
+                        <AbilityBarsCompact member={member} />
                       </div>
                     </div>
                     <button
@@ -734,7 +750,7 @@ export default function FormationPage({ params }: FormationPageProps) {
                         <span className="text-xs text-gray-500">
                           {POSITION_NAMES_JA[member.position as Position]}
                         </span>
-                        <AbilityBars member={member} compact />
+                        <AbilityBarsCompact member={member} />
                       </div>
                     </div>
                     <button

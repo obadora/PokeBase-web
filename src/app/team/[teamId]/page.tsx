@@ -13,6 +13,7 @@ import type { Team, TeamMemberWithPokemon, Grade } from "@/types/team";
 import type { Position } from "@/types/position";
 import { POSITION_NAMES_JA } from "@/types/position";
 import { GRADE_NAMES_JA } from "@/types/team";
+import { getReputationRank, getMemberLimit, getReputationStars, getPointsToNextRank } from "@/types/reputation";
 import { getTeamById, getTeamMembers } from "@/lib/supabase/team";
 import { getAllPokemon } from "@/lib/services/pokemon-data";
 import { calculateFielderAbility, FIELDER_ABILITY_NAMES_JA } from "@/lib/calculator/fielder";
@@ -420,13 +421,53 @@ export default function TeamDetailPage({ params }: TeamDetailPageProps) {
           </div>
         </div>
 
+        {/* 評判・部員数ステータス */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">評判</p>
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-500 text-lg">
+                  {"★".repeat(getReputationStars(team.reputation))}
+                  {"☆".repeat(5 - getReputationStars(team.reputation))}
+                </span>
+                <span className="font-bold text-gray-800">{team.reputation}pt</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                {getReputationRank(team.reputation)}
+              </span>
+              {getPointsToNextRank(team.reputation) !== null && (
+                <p className="text-xs text-gray-500 mt-1">
+                  次のランクまで: {getPointsToNextRank(team.reputation)}pt
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-3 mt-3 border-t">
+            <div>
+              <p className="text-sm text-gray-500">1年生部員数上限</p>
+              <p className="font-bold text-gray-800">
+                {membersWithPokemon.filter((m) => m.grade === 1).length}/{getMemberLimit(team.reputation)}人
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* アクションボタン */}
-        <div className="mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-6">
           <Link
             href={`/team/${teamId}/formation`}
-            className="block w-full py-3 px-4 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors text-center"
+            className="py-3 px-4 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors text-center"
           >
-            ポジション・打順編成
+            編成
+          </Link>
+          <Link
+            href={`/team/${teamId}/scout`}
+            className="py-3 px-4 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors text-center"
+          >
+            スカウト
           </Link>
         </div>
 
@@ -536,20 +577,6 @@ export default function TeamDetailPage({ params }: TeamDetailPageProps) {
           )}
         </div>
 
-        {/* チーム統計 */}
-        <div className="mt-6 bg-white rounded-lg p-4 shadow-sm">
-          <h3 className="font-semibold text-gray-700 mb-2">チーム情報</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-500">メンバー数:</span>
-              <span className="ml-2 font-semibold">{membersWithPokemon.length}人</span>
-            </div>
-            <div>
-              <span className="text-gray-500">評判:</span>
-              <span className="ml-2 font-semibold">{team.reputation}</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* メンバー詳細モーダル */}

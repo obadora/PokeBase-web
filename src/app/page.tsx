@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/auth";
 import { getUserTeams } from "@/lib/supabase/team";
 import type { Team } from "@/types/team";
+import { getReputationRank, getReputationStars } from "@/types/reputation";
 import Link from "next/link";
 
 export default function Home() {
@@ -96,7 +97,16 @@ export default function Home() {
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="font-semibold text-gray-800">{team.team_name}</h3>
-                          <p className="text-sm text-gray-500">
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-yellow-500 text-sm">
+                              {"★".repeat(getReputationStars(team.reputation))}
+                              {"☆".repeat(5 - getReputationStars(team.reputation))}
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                              {getReputationRank(team.reputation)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
                             作成日: {new Date(team.created_at).toLocaleDateString("ja-JP")}
                           </p>
                         </div>
