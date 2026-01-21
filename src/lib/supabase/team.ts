@@ -293,3 +293,87 @@ export async function updateBattingOrder(
 
   return { success: true, error: null };
 }
+
+/**
+ * チームの評判ポイントを更新する
+ * @param teamId チームID
+ * @param points 加算するポイント（負の値で減算）
+ * @returns 更新後のチーム
+ */
+export async function updateTeamReputation(
+  teamId: string,
+  points: number
+): Promise<{ data: Team | null; error: Error | null }> {
+  // まず現在の評判を取得
+  const { data: currentTeam, error: fetchError } = await supabase
+    .from("teams")
+    .select("reputation")
+    .eq("id", teamId)
+    .single();
+
+  if (fetchError) {
+    return { data: null, error: new Error(fetchError.message) };
+  }
+
+  // 新しい評判を計算（0未満にはならない）
+  const newReputation = Math.max(0, (currentTeam?.reputation ?? 0) + points);
+
+  // 評判を更新
+  const { data, error } = await supabase
+    .from("teams")
+    .update({ reputation: newReputation })
+    .eq("id", teamId)
+    .select()
+    .single();
+
+  if (error) {
+    return { data: null, error: new Error(error.message) };
+  }
+
+  return { data: data as Team, error: null };
+}
+
+/**
+ * チームの評判ポイントを直接設定する
+ * @param teamId チームID
+ * @param reputation 設定する評判ポイント
+ * @returns 更新後のチーム
+ */
+export async function setTeamReputation(
+  teamId: string,
+  reputation: number
+): Promise<{ data: Team | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .from("teams")
+    .update({ reputation: Math.max(0, reputation) })
+    .eq("id", teamId)
+    .select()
+    .single();
+
+  if (error) {
+    return { data: null, error: new Error(error.message) };
+  }
+
+  return { data: data as Team, error: null };
+}
+
+/**
+ * チームの1年生メンバー数を取得する
+ * @param teamId チームID
+ * @returns 1年生メンバー数
+ */
+export async function getFirstYearMemberCount(
+  teamId: string
+): Promise<{ count: number; error: Error | null }> {
+  const { count, error } = await supabase
+    .from("team_members")
+    .select("*", { count: "exact", head: true })
+    .eq("team_id", teamId)
+    .eq("grade", 1);
+
+  if (error) {
+    return { count: 0, error: new Error(error.message) };
+  }
+
+  return { count: count ?? 0, error: null };
+}
