@@ -1,6 +1,6 @@
 "use client";
 
-import type { InningScore } from "@/types/match";
+import type { InningScore, TeamStats } from "@/types/match";
 
 interface ScoreboardProps {
   teamAName: string;
@@ -8,6 +8,8 @@ interface ScoreboardProps {
   innings: InningScore[];
   teamAScore: number;
   teamBScore: number;
+  teamAStats?: TeamStats;
+  teamBStats?: TeamStats;
 }
 
 /**
@@ -20,7 +22,11 @@ export function Scoreboard({
   innings,
   teamAScore,
   teamBScore,
+  teamAStats,
+  teamBStats,
 }: ScoreboardProps) {
+  const showStats = teamAStats && teamBStats;
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-sm">
@@ -32,39 +38,30 @@ export function Scoreboard({
             {innings.map((inning) => (
               <th
                 key={inning.inning}
-                className="border border-gray-300 px-2 py-1 text-center min-w-[32px]"
+                className="border border-gray-300 px-2 py-1 text-center min-w-[28px]"
               >
                 {inning.inning}
               </th>
             ))}
-            <th className="border border-gray-300 px-2 py-1 text-center min-w-[40px] bg-gray-200 font-bold">
-              計
+            <th className="border border-gray-300 px-2 py-1 text-center min-w-[32px] bg-gray-200 font-bold">
+              R
             </th>
+            {showStats && (
+              <>
+                <th className="border border-gray-300 px-2 py-1 text-center min-w-[32px] bg-gray-200 font-bold">
+                  H
+                </th>
+                <th className="border border-gray-300 px-2 py-1 text-center min-w-[32px] bg-gray-200 font-bold">
+                  E
+                </th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody>
-          {/* 自チーム */}
-          <tr className="bg-green-50">
-            <td className="border border-gray-300 px-2 py-1 font-medium truncate max-w-[120px]">
-              {teamAName}
-            </td>
-            {innings.map((inning) => (
-              <td
-                key={inning.inning}
-                className={`border border-gray-300 px-2 py-1 text-center ${
-                  inning.teamAScore > 0 ? "font-bold text-green-700" : ""
-                }`}
-              >
-                {inning.teamAScore}
-              </td>
-            ))}
-            <td className="border border-gray-300 px-2 py-1 text-center bg-green-100 font-bold text-lg">
-              {teamAScore}
-            </td>
-          </tr>
-          {/* 相手チーム */}
+          {/* 相手チーム（先攻・表）- 上段 */}
           <tr className="bg-red-50">
-            <td className="border border-gray-300 px-2 py-1 font-medium truncate max-w-[120px]">
+            <td className="border border-gray-300 px-2 py-1 font-medium truncate max-w-[100px]">
               {teamBName}
             </td>
             {innings.map((inning) => (
@@ -80,6 +77,49 @@ export function Scoreboard({
             <td className="border border-gray-300 px-2 py-1 text-center bg-red-100 font-bold text-lg">
               {teamBScore}
             </td>
+            {showStats && (
+              <>
+                <td className="border border-gray-300 px-2 py-1 text-center bg-red-100 font-bold">
+                  {teamBStats.hits}
+                </td>
+                <td className="border border-gray-300 px-2 py-1 text-center bg-red-100 font-bold">
+                  {teamBStats.errors}
+                </td>
+              </>
+            )}
+          </tr>
+          {/* 自チーム（後攻・裏）- 下段 */}
+          <tr className="bg-green-50">
+            <td className="border border-gray-300 px-2 py-1 font-medium truncate max-w-[100px]">
+              {teamAName}
+            </td>
+            {innings.map((inning) => (
+              <td
+                key={inning.inning}
+                className={`border border-gray-300 px-2 py-1 text-center ${
+                  inning.teamASkipped
+                    ? "text-gray-500"
+                    : inning.teamAScore > 0
+                      ? "font-bold text-green-700"
+                      : ""
+                }`}
+              >
+                {inning.teamASkipped ? "X" : inning.teamAScore}
+              </td>
+            ))}
+            <td className="border border-gray-300 px-2 py-1 text-center bg-green-100 font-bold text-lg">
+              {teamAScore}
+            </td>
+            {showStats && (
+              <>
+                <td className="border border-gray-300 px-2 py-1 text-center bg-green-100 font-bold">
+                  {teamAStats.hits}
+                </td>
+                <td className="border border-gray-300 px-2 py-1 text-center bg-green-100 font-bold">
+                  {teamAStats.errors}
+                </td>
+              </>
+            )}
           </tr>
         </tbody>
       </table>

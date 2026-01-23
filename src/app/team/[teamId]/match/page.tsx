@@ -16,6 +16,7 @@ import { getAllPokemon } from "@/lib/services/pokemon-data";
 import { simulateMatch, calculateTeamPower } from "@/lib/simulator/match";
 import { generateRandomOpponent } from "@/lib/simulator/opponent";
 import { MatchResultDisplay } from "@/components/match/MatchResult";
+import { MatchProgress } from "@/components/match/MatchProgress";
 import {
   getOrCreatePracticeMatch,
   saveMatchResult,
@@ -37,6 +38,7 @@ export default function MatchPage({ params }: MatchPageProps) {
   const [matchState, setMatchState] = useState<MatchState>("idle");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allPokemon, setAllPokemon] = useState<Pokemon[]>([]);
 
   // データ読み込み
   useEffect(() => {
@@ -53,9 +55,10 @@ export default function MatchPage({ params }: MatchPageProps) {
         if (memberError) throw memberError;
 
         // ポケモンデータを取得
-        const allPokemon = await getAllPokemon();
+        const pokemonData = await getAllPokemon();
+        setAllPokemon(pokemonData);
         const pokemonMap = new Map<number, Pokemon>();
-        allPokemon.forEach((p) => pokemonMap.set(p.id, p));
+        pokemonData.forEach((p) => pokemonMap.set(p.id, p));
 
         const membersWithPokemon: TeamMemberWithPokemon[] = [];
         for (const member of memberData) {
@@ -78,7 +81,7 @@ export default function MatchPage({ params }: MatchPageProps) {
 
   // 試合準備
   const handlePrepareMatch = () => {
-    if (!team || members.length === 0) return;
+    if (!team || members.length === 0 || allPokemon.length === 0) return;
 
     const starters = members.filter((m) => m.is_starter);
     if (starters.length < 9) {
@@ -87,21 +90,17 @@ export default function MatchPage({ params }: MatchPageProps) {
     }
 
     const teamPower = calculateTeamPower(members);
-    const newOpponent = generateRandomOpponent(teamPower.total);
+    const newOpponent = generateRandomOpponent(teamPower.total, allPokemon);
     setOpponent(newOpponent);
     setMatchState("preparing");
     setError(null);
   };
 
   // 試合開始
-  const handleStartMatch = async () => {
+  const handleStartMatch = () => {
     if (!team || !opponent) return;
 
-    setMatchState("playing");
-
-    // シミュレーション実行（少し遅延を入れて演出）
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
+    // シミュレーション結果を先に計算
     const result = simulateMatch(members, team.team_name, opponent);
     setMatchResult(result);
 
@@ -110,20 +109,28 @@ export default function MatchPage({ params }: MatchPageProps) {
       result.winner === "A" ? REPUTATION_POINTS.WIN : REPUTATION_POINTS.LOSS;
     setReputationChange(points);
 
+    // 試合進行表示へ
+    setMatchState("playing");
+  };
+
+  // 試合進行完了時の処理
+  const handleMatchProgressComplete = async () => {
+    if (!team || !opponent || !matchResult) return;
+
     // DB保存
     try {
       // 評判ポイント更新
-      await updateTeamReputation(teamId, points);
-      setTeam((prev) => (prev ? { ...prev, reputation: prev.reputation + points } : null));
+      await updateTeamReputation(teamId, reputationChange);
+      setTeam((prev) => (prev ? { ...prev, reputation: prev.reputation + reputationChange } : null));
 
       // 試合結果保存
       const { data: tournament } = await getOrCreatePracticeMatch(teamId);
       if (tournament) {
-        const score = `${result.teamAScore}-${result.teamBScore}`;
+        const score = `${matchResult.teamAScore}-${matchResult.teamBScore}`;
         await saveMatchResult(
           tournament.id,
           opponent.name,
-          result.winner === "A" ? "win" : "lose",
+          matchResult.winner === "A" ? "win" : "lose",
           score
         );
       }
@@ -310,14 +317,13 @@ export default function MatchPage({ params }: MatchPageProps) {
           </>
         )}
 
-        {matchState === "playing" && (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <div className="animate-pulse">
-              <div className="text-6xl mb-4">&#9918;</div>
-              <p className="text-xl font-bold text-gray-800">試合中...</p>
-              <p className="text-gray-500 mt-2">結果を計算しています</p>
-            </div>
-          </div>
+        {matchState === "playing" && matchResult && opponent && (
+          <MatchProgress
+            teamAName={team.team_name}
+            teamBName={opponent.name}
+            result={matchResult}
+            onComplete={handleMatchProgressComplete}
+          />
         )}
 
         {matchState === "result" && matchResult && opponent && (

@@ -12,6 +12,26 @@ export interface InningScore {
   inning: number;
   teamAScore: number;
   teamBScore: number;
+  /** 自チームのイニングヒット数 */
+  teamAHits: number;
+  /** 相手チームのイニングヒット数 */
+  teamBHits: number;
+  /** 自チームのイニングエラー数 */
+  teamAErrors: number;
+  /** 相手チームのイニングエラー数 */
+  teamBErrors: number;
+  /** 9回裏がスキップされたか（後攻リードで攻撃なし）- teamA=後攻 */
+  teamASkipped?: boolean;
+}
+
+/** チーム統計 */
+export interface TeamStats {
+  /** 得点 */
+  runs: number;
+  /** ヒット数 */
+  hits: number;
+  /** エラー数 */
+  errors: number;
 }
 
 /** 試合結果 */
@@ -26,6 +46,18 @@ export interface MatchResult {
   innings: InningScore[];
   /** 試合のハイライト */
   highlights: MatchHighlight[];
+  /** 自チームの統計 */
+  teamAStats: TeamStats;
+  /** 相手チームの統計 */
+  teamBStats: TeamStats;
+  /** 自チーム打者成績 */
+  teamABatters?: BatterStats[];
+  /** 相手チーム打者成績 */
+  teamBBatters?: BatterStats[];
+  /** 自チーム投手成績 */
+  teamAPitcher?: PitcherStats;
+  /** 相手チーム投手成績 */
+  teamBPitcher?: PitcherStats;
 }
 
 /** 試合ハイライト */
@@ -33,6 +65,95 @@ export interface MatchHighlight {
   inning: number;
   description: string;
   type: "hit" | "homerun" | "strikeout" | "defense" | "error";
+}
+
+/** 打席結果の種類 */
+export type AtBatResult =
+  | "single" // 単打
+  | "double" // 二塁打
+  | "triple" // 三塁打
+  | "homerun" // 本塁打
+  | "strikeout" // 三振
+  | "groundout" // ゴロアウト
+  | "flyout" // フライアウト
+  | "walk" // 四球
+  | "hitByPitch" // 死球
+  | "sacrifice" // 犠打
+  | "sacrificeFly" // 犠飛
+  | "error" // 失策
+  | "fieldersChoice"; // 野選
+
+/** 打席結果の日本語表示 */
+export const AT_BAT_RESULT_LABELS: Record<AtBatResult, string> = {
+  single: "安",
+  double: "二",
+  triple: "三",
+  homerun: "本",
+  strikeout: "三振",
+  groundout: "ゴ",
+  flyout: "飛",
+  walk: "四",
+  hitByPitch: "死",
+  sacrifice: "犠打",
+  sacrificeFly: "犠飛",
+  error: "失",
+  fieldersChoice: "野選",
+};
+
+/** 打者の打席結果（1打席分） */
+export interface AtBat {
+  inning: number;
+  result: AtBatResult;
+  rpiChance?: boolean; // 得点機会（走者あり）
+  rbi: number; // 打点
+  run: boolean; // 得点したか
+  stolenBase: boolean; // 盗塁
+  caughtStealing: boolean; // 盗塁死
+}
+
+/** 打者の試合成績 */
+export interface BatterStats {
+  playerId: string;
+  playerName: string;
+  position: string;
+  battingOrder: number;
+  atBats: AtBat[]; // 全打席結果
+  // 集計値
+  plateAppearances: number; // 打席数
+  atBatCount: number; // 打数（犠打・犠飛・四球・死球除く）
+  hits: number; // 安打
+  doubles: number; // 二塁打
+  triples: number; // 三塁打
+  homeruns: number; // 本塁打
+  rbi: number; // 打点
+  runs: number; // 得点
+  strikeouts: number; // 三振
+  walks: number; // 四球
+  hitByPitch: number; // 死球
+  sacrificeHits: number; // 犠打
+  sacrificeFlies: number; // 犠飛
+  stolenBases: number; // 盗塁
+  caughtStealing: number; // 盗塁死
+  errors: number; // 失策
+}
+
+/** 投手の試合成績 */
+export interface PitcherStats {
+  playerId: string;
+  playerName: string;
+  // 投球成績
+  inningsPitched: number; // 投球回（3で割った余りが端数）
+  inningsPitchedDisplay: string; // 表示用（例: "7.0", "6.2"）
+  battersFaced: number; // 対戦打者数
+  pitchCount: number; // 球数
+  hits: number; // 被安打
+  homeruns: number; // 被本塁打
+  strikeouts: number; // 奪三振
+  walks: number; // 与四球
+  hitByPitch: number; // 与死球
+  wildPitches: number; // 暴投
+  runs: number; // 失点
+  earnedRuns: number; // 自責点
 }
 
 /** 対戦相手チーム */
@@ -47,6 +168,10 @@ export interface OpponentMember {
   name: string;
   position: Position;
   power: number;
+  /** ポケモンID（オプション） */
+  pokemonId?: number;
+  /** ポケモン画像URL（オプション） */
+  spriteUrl?: string | null;
 }
 
 /** チーム戦力情報 */
@@ -75,24 +200,3 @@ export const DEFAULT_MATCH_CONFIG: MatchConfig = {
   randomFactor: 5,
 };
 
-/** 対戦相手チーム名リスト */
-export const OPPONENT_TEAM_NAMES = [
-  "草タイプ高校",
-  "炎タイプ学園",
-  "水タイプ工業",
-  "電気タイプ商業",
-  "岩タイプ学院",
-  "地面タイプ農業",
-  "飛行タイプ高校",
-  "格闘タイプ大学附属",
-  "毒タイプ高校",
-  "虫タイプ農林",
-  "ゴーストタイプ学園",
-  "鋼タイプ工科",
-  "氷タイプ高校",
-  "ドラゴンタイプ学院",
-  "悪タイプ商業",
-  "エスパータイプ大学附属",
-  "フェアリータイプ女学院",
-  "ノーマルタイプ総合高校",
-];

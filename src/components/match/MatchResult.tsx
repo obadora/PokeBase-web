@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import type { MatchResult, MatchHighlight } from "@/types/match";
 import { Scoreboard } from "./Scoreboard";
+import { BatterStatsTable } from "./BatterStatsTable";
+import { PitcherStatsTable } from "./PitcherStatsTable";
 
 interface MatchResultProps {
   teamAName: string;
@@ -11,6 +14,8 @@ interface MatchResultProps {
   onClose: () => void;
   onNextMatch?: () => void;
 }
+
+type ResultTab = "summary" | "teamABatters" | "teamBBatters" | "pitchers";
 
 /**
  * 試合結果表示コンポーネント
@@ -24,11 +29,19 @@ export function MatchResultDisplay({
   onNextMatch,
 }: MatchResultProps) {
   const isWin = result.winner === "A";
+  const [activeTab, setActiveTab] = useState<ResultTab>("summary");
+
+  const tabs: { id: ResultTab; label: string }[] = [
+    { id: "summary", label: "概要" },
+    { id: "teamABatters", label: `${teamAName}打撃` },
+    { id: "teamBBatters", label: `${teamBName}打撃` },
+    { id: "pitchers", label: "投手成績" },
+  ];
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
+    <div className="bg-white rounded-xl shadow-lg p-6 max-w-4xl mx-auto">
       {/* ヘッダー */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-4">
         <h2 className="text-2xl font-bold mb-2">試合結果</h2>
         <div
           className={`inline-block px-4 py-2 rounded-full text-lg font-bold ${
@@ -42,12 +55,12 @@ export function MatchResultDisplay({
       </div>
 
       {/* スコア表示 */}
-      <div className="text-center mb-6">
-        <div className="flex items-center justify-center gap-4 text-3xl font-bold">
+      <div className="text-center mb-4">
+        <div className="flex items-center justify-center gap-4 text-2xl font-bold">
           <span className={isWin ? "text-green-600" : "text-gray-600"}>
             {teamAName}
           </span>
-          <span className="text-4xl">
+          <span className="text-3xl">
             <span className={isWin ? "text-green-600" : "text-gray-600"}>
               {result.teamAScore}
             </span>
@@ -62,8 +75,124 @@ export function MatchResultDisplay({
         </div>
       </div>
 
+      {/* タブナビゲーション */}
+      <div className="border-b border-gray-200 mb-4">
+        <nav className="flex gap-1 -mb-px overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* タブコンテンツ */}
+      <div className="mb-6 min-h-[300px]">
+        {activeTab === "summary" && (
+          <SummaryTab
+            teamAName={teamAName}
+            teamBName={teamBName}
+            result={result}
+            reputationChange={reputationChange}
+            isWin={isWin}
+          />
+        )}
+
+        {activeTab === "teamABatters" && result.teamABatters && (
+          <BatterStatsTable
+            batters={result.teamABatters}
+            teamName={teamAName}
+            innings={result.innings.length}
+          />
+        )}
+
+        {activeTab === "teamBBatters" && result.teamBBatters && (
+          <BatterStatsTable
+            batters={result.teamBBatters}
+            teamName={teamBName}
+            innings={result.innings.length}
+          />
+        )}
+
+        {activeTab === "pitchers" && (
+          <div className="space-y-6">
+            {result.teamAPitcher && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">
+                  {teamAName} 投手
+                </h4>
+                <PitcherStatsTable
+                  pitcher={result.teamAPitcher}
+                  teamName={teamAName}
+                  isWinner={isWin}
+                />
+              </div>
+            )}
+            {result.teamBPitcher && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">
+                  {teamBName} 投手
+                </h4>
+                <PitcherStatsTable
+                  pitcher={result.teamBPitcher}
+                  teamName={teamBName}
+                  isWinner={!isWin}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* アクションボタン */}
+      <div className="flex gap-3 justify-center pt-4 border-t border-gray-200">
+        <button
+          onClick={onClose}
+          className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+        >
+          戻る
+        </button>
+        {onNextMatch && (
+          <button
+            onClick={onNextMatch}
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+          >
+            次の試合へ
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 概要タブ
+ */
+function SummaryTab({
+  teamAName,
+  teamBName,
+  result,
+  reputationChange,
+  isWin,
+}: {
+  teamAName: string;
+  teamBName: string;
+  result: MatchResult;
+  reputationChange: number;
+  isWin: boolean;
+}) {
+  return (
+    <div className="space-y-4">
       {/* スコアボード */}
-      <div className="mb-6">
+      <div>
         <h3 className="text-sm font-medium text-gray-500 mb-2">スコアボード</h3>
         <Scoreboard
           teamAName={teamAName}
@@ -71,15 +200,15 @@ export function MatchResultDisplay({
           innings={result.innings}
           teamAScore={result.teamAScore}
           teamBScore={result.teamBScore}
+          teamAStats={result.teamAStats}
+          teamBStats={result.teamBStats}
         />
       </div>
 
       {/* ハイライト */}
       {result.highlights.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">
-            ハイライト
-          </h3>
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 mb-2">ハイライト</h3>
           <div className="bg-gray-50 rounded-lg p-3 max-h-40 overflow-y-auto">
             <ul className="space-y-1 text-sm">
               {result.highlights.slice(0, 5).map((highlight, index) => (
@@ -99,7 +228,7 @@ export function MatchResultDisplay({
       )}
 
       {/* 評判ポイント変動 */}
-      <div className="text-center mb-6">
+      <div className="text-center">
         <div
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
             isWin ? "bg-yellow-50 text-yellow-700" : "bg-gray-50 text-gray-600"
@@ -111,24 +240,6 @@ export function MatchResultDisplay({
             {reputationChange}pt
           </span>
         </div>
-      </div>
-
-      {/* アクションボタン */}
-      <div className="flex gap-3 justify-center">
-        <button
-          onClick={onClose}
-          className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
-        >
-          戻る
-        </button>
-        {onNextMatch && (
-          <button
-            onClick={onNextMatch}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-          >
-            次の試合へ
-          </button>
-        )}
       </div>
     </div>
   );

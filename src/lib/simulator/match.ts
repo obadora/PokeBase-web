@@ -1,6 +1,6 @@
 /**
  * 試合シミュレーションロジック
- * チーム戦力に基づいた試合結果を生成
+ * 自然な野球ルールに基づいた打席シミュレーション
  */
 
 import type { TeamMemberWithPokemon } from "@/types/team";
@@ -11,9 +11,19 @@ import type {
   OpponentTeam,
   TeamPower,
   MatchConfig,
+  TeamStats,
 } from "@/types/match";
 import { calculateFielderAbility } from "@/lib/calculator/fielder";
 import { calculatePitcherAbility } from "@/lib/calculator/pitcher";
+import {
+  simulateGame,
+  generateBatterStats,
+  generatePitcherStats,
+  generateOpponentBatterStats,
+  generateOpponentPitcherStats,
+  getBatterPower,
+  getPitcherPower,
+} from "./player-stats";
 
 /**
  * ランダムな整数を生成
@@ -65,7 +75,10 @@ export function calculateTeamPower(
     ? (() => {
         const ability = calculatePitcherAbility(pitcher.pokemon.stats);
         return (
-          (ability.velocity + ability.control + ability.breaking + ability.stamina) /
+          (ability.velocity +
+            ability.control +
+            ability.breaking +
+            ability.stamina) /
           4
         );
       })()
@@ -80,60 +93,6 @@ export function calculateTeamPower(
     defense: Math.round(defense),
     pitching: Math.round(pitching),
   };
-}
-
-/**
- * イニング別スコアを生成
- */
-export function generateInnings(
-  teamATotal: number,
-  teamBTotal: number,
-  inningCount: number = 9
-): InningScore[] {
-  const innings: InningScore[] = [];
-  let remainingA = teamATotal;
-  let remainingB = teamBTotal;
-
-  for (let i = 1; i <= inningCount; i++) {
-    // 残りイニング数
-    const remaining = inningCount - i + 1;
-
-    // 各イニングで取る点数を確率的に分配
-    // 後半になるほど得点が入りやすい傾向（疲労による）
-    const factor = i <= 3 ? 0.8 : i <= 6 ? 1.0 : 1.2;
-
-    // 期待得点（残り点数を残りイニングで均等分配 + ランダム要素）
-    const expectedA = Math.ceil(remainingA / remaining);
-    const expectedB = Math.ceil(remainingB / remaining);
-
-    // このイニングの得点（0 から 期待得点*factor の範囲でランダム）
-    const inningScoreA = Math.min(
-      randomInt(0, Math.ceil(expectedA * factor)),
-      remainingA
-    );
-    const inningScoreB = Math.min(
-      randomInt(0, Math.ceil(expectedB * factor)),
-      remainingB
-    );
-
-    innings.push({
-      inning: i,
-      teamAScore: inningScoreA,
-      teamBScore: inningScoreB,
-    });
-
-    remainingA -= inningScoreA;
-    remainingB -= inningScoreB;
-  }
-
-  // 残りの点数を最終イニングに追加
-  if (remainingA > 0 || remainingB > 0) {
-    const lastInning = innings[innings.length - 1];
-    lastInning.teamAScore += remainingA;
-    lastInning.teamBScore += remainingB;
-  }
-
-  return innings;
 }
 
 /**
@@ -153,6 +112,9 @@ function generateHighlights(
   ];
 
   for (const inning of innings) {
+    // スキップされたイニングは処理しない
+    if (inning.teamASkipped) continue;
+
     // 得点があったイニングでハイライトを生成
     if (inning.teamAScore > 0) {
       const type =
@@ -187,7 +149,11 @@ function generateHighlights(
     }
 
     // 無得点のイニングでも時々ハイライトを追加
-    if (inning.teamAScore === 0 && inning.teamBScore === 0 && Math.random() < 0.3) {
+    if (
+      inning.teamAScore === 0 &&
+      inning.teamBScore === 0 &&
+      Math.random() < 0.3
+    ) {
       const defenseTeam = Math.random() < 0.5 ? teamAName : teamBName;
       highlights.push({
         inning: inning.inning,
@@ -223,7 +189,31 @@ function generateHighlightDescription(
 }
 
 /**
+ * イニングデータからチームの統計情報を集計
+ */
+function calculateTeamStatsFromInnings(
+  innings: InningScore[],
+  team: "A" | "B"
+): TeamStats {
+  const runs = innings.reduce(
+    (sum, i) => sum + (team === "A" ? i.teamAScore : i.teamBScore),
+    0
+  );
+  const hits = innings.reduce(
+    (sum, i) => sum + (team === "A" ? i.teamAHits : i.teamBHits),
+    0
+  );
+  const errors = innings.reduce(
+    (sum, i) => sum + (team === "A" ? i.teamAErrors : i.teamBErrors),
+    0
+  );
+
+  return { runs, hits, errors };
+}
+
+/**
  * 試合をシミュレート
+ * 自然な野球ルールに基づいた打席シミュレーション
  */
 export function simulateMatch(
   teamAMembers: TeamMemberWithPokemon[],
@@ -231,19 +221,42 @@ export function simulateMatch(
   opponentTeam: OpponentTeam,
   config: MatchConfig = { innings: 9, randomFactor: 5 }
 ): MatchResult {
-  // チーム戦力を計算
-  const teamAPower = calculateTeamPower(teamAMembers);
-  const teamBPower = opponentTeam.power;
+  // スターティングメンバーを打順順に取得
+  const teamAStarters = teamAMembers
+    .filter((m) => m.is_starter)
+    .sort((a, b) => (a.batting_order || 99) - (b.batting_order || 99));
 
-  // 基礎得点（戦力 / 20）+ ランダム要素（0〜randomFactor）
-  const baseScoreA = Math.floor(teamAPower.total / 20);
-  const baseScoreB = Math.floor(teamBPower / 20);
+  // 投手を取得
+  const teamAPitcherMember = teamAStarters.find((m) => m.position === "pitcher");
+  const opponentPitcher = opponentTeam.members.find(
+    (m) => m.position === "pitcher"
+  );
 
-  const scoreA = baseScoreA + randomInt(0, config.randomFactor);
-  const scoreB = baseScoreB + randomInt(0, config.randomFactor);
+  // 投手の能力値を計算
+  const teamAPitcherPower = teamAPitcherMember
+    ? getPitcherPower(teamAPitcherMember)
+    : 50;
+  const teamBPitcherPower = opponentPitcher ? opponentPitcher.power : 50;
 
-  // イニング別スコアを生成
-  const innings = generateInnings(scoreA, scoreB, config.innings);
+  // 打者データを準備
+  const teamABatterData = teamAStarters.map((member) => ({
+    power: getBatterPower(member),
+    member,
+  }));
+
+  const teamBBatterData = opponentTeam.members.map((member) => ({
+    power: member.power,
+    member,
+  }));
+
+  // 試合をシミュレート（自然な野球ルール）
+  const { innings, teamAAtBats, teamBAtBats } = simulateGame(
+    teamABatterData,
+    teamBBatterData,
+    teamAPitcherPower,
+    teamBPitcherPower,
+    config.innings
+  );
 
   // ハイライトを生成
   const highlights = generateHighlights(innings, teamAName, opponentTeam.name);
@@ -252,11 +265,36 @@ export function simulateMatch(
   const finalScoreA = innings.reduce((sum, i) => sum + i.teamAScore, 0);
   const finalScoreB = innings.reduce((sum, i) => sum + i.teamBScore, 0);
 
+  // イニングデータからチーム統計を集計
+  const teamAStats = calculateTeamStatsFromInnings(innings, "A");
+  const teamBStats = calculateTeamStatsFromInnings(innings, "B");
+
+  // 打者成績を生成
+  const teamABatters = generateBatterStats(teamAMembers, teamAAtBats);
+  const teamBBatters = generateOpponentBatterStats(
+    opponentTeam.members,
+    teamBAtBats
+  );
+
+  // 投手成績を生成（打者成績から導出して整合性を保つ）
+  const teamAPitcher = teamAPitcherMember
+    ? generatePitcherStats(teamAPitcherMember, innings, teamBBatters)
+    : undefined;
+  const teamBPitcher = opponentPitcher
+    ? generateOpponentPitcherStats(opponentPitcher, innings, teamABatters)
+    : undefined;
+
   return {
     teamAScore: finalScoreA,
     teamBScore: finalScoreB,
     winner: finalScoreA > finalScoreB ? "A" : "B",
     innings,
     highlights,
+    teamAStats,
+    teamBStats,
+    teamABatters,
+    teamBBatters,
+    teamAPitcher,
+    teamBPitcher,
   };
 }
