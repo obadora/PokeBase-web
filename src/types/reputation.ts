@@ -24,8 +24,8 @@ export const REPUTATION_THRESHOLDS: Record<ReputationRank, ReputationThreshold> 
 export const REPUTATION_POINTS = {
   /** 勝利時の獲得ポイント */
   WIN: 50,
-  /** 敗北時の獲得ポイント */
-  LOSS: 10,
+  /** 敗北時の減少ポイント */
+  LOSS: -30,
   /** スカウト候補更新のコスト */
   SCOUT_REFRESH_COST: 20,
 } as const;

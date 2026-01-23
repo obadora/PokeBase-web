@@ -470,10 +470,10 @@ export default function TeamDetailPage({ params }: TeamDetailPageProps) {
             スカウト
           </Link>
           <Link
-            href={`/team/${teamId}/tournament`}
-            className="py-3 px-4 bg-yellow-500 text-white text-sm font-semibold rounded-lg hover:bg-yellow-600 transition-colors text-center"
+            href={`/team/${teamId}/match`}
+            className="py-3 px-4 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 transition-colors text-center"
           >
-            大会
+            試合
           </Link>
         </div>
 
