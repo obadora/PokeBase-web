@@ -257,19 +257,31 @@ function AtBatResultCell({ atBat }: { atBat: AtBat }) {
   const label = LABELS[atBat.result];
 
   // 結果に応じた色分け
-  const colorClass = getResultColorClass(atBat.result);
+  const colorClass = getResultColorClass(atBat.result, atBat.rbi > 0);
+
+  // 打点がある場合は数字を付加（内野ゴロでの打点など）
+  const rbiLabel = atBat.rbi > 0 ? formatRbi(atBat.rbi) : "";
 
   return (
     <span className={`inline-block px-1 ${colorClass}`} title={getResultTitle(atBat)}>
       {label}
+      {rbiLabel && <span className="text-[10px] align-super">{rbiLabel}</span>}
     </span>
   );
 }
 
 /**
+ * 打点を丸数字にフォーマット
+ */
+function formatRbi(rbi: number): string {
+  const circledNumbers = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"];
+  return circledNumbers[rbi] ?? `(${rbi})`;
+}
+
+/**
  * 打席結果の色クラスを取得
  */
-function getResultColorClass(result: AtBat["result"]): string {
+function getResultColorClass(result: AtBat["result"], hasRbi: boolean): string {
   switch (result) {
     case "homerun":
       return "text-yellow-600 font-bold";
@@ -284,6 +296,13 @@ function getResultColorClass(result: AtBat["result"]): string {
       return "text-blue-500";
     case "error":
       return "text-orange-500";
+    case "groundout":
+    case "flyout":
+    case "sacrifice":
+    case "sacrificeFly":
+    case "fieldersChoice":
+      // 打点がある場合は強調表示
+      return hasRbi ? "text-purple-600 font-bold" : "text-gray-600";
     default:
       return "text-gray-600";
   }

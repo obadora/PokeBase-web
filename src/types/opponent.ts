@@ -54,6 +54,59 @@ export const TOURNAMENT_CONFIGS: Record<TournamentType, TournamentConfig> = {
   },
 };
 
+/** 大会報酬設定 */
+export interface TournamentReward {
+  /** 優勝報酬（評判ポイント） */
+  championReward: number;
+  /** 1勝ごとの報酬（評判ポイント） */
+  winReward: number;
+  /** 参加報酬（評判ポイント） */
+  participationReward: number;
+}
+
+/** 大会種別ごとの報酬設定 */
+export const TOURNAMENT_REWARDS: Record<TournamentType, TournamentReward> = {
+  district: {
+    championReward: 100,
+    winReward: 20,
+    participationReward: 10,
+  },
+  regional: {
+    championReward: 300,
+    winReward: 50,
+    participationReward: 30,
+  },
+  national: {
+    championReward: 1000,
+    winReward: 100,
+    participationReward: 50,
+  },
+};
+
+/** 大会参加条件 */
+export interface TournamentRequirement {
+  /** 必要な過去の優勝（nullなら条件なし） */
+  requiredChampionship: TournamentType | null;
+  /** 最低評判ポイント */
+  minReputation: number;
+}
+
+/** 大会種別ごとの参加条件 */
+export const TOURNAMENT_REQUIREMENTS: Record<TournamentType, TournamentRequirement> = {
+  district: {
+    requiredChampionship: null,
+    minReputation: 0,
+  },
+  regional: {
+    requiredChampionship: "district",
+    minReputation: 50,
+  },
+  national: {
+    requiredChampionship: "regional",
+    minReputation: 200,
+  },
+};
+
 /** 対戦相手チームメンバー */
 export interface OpponentMember {
   pokemon: Pokemon;
