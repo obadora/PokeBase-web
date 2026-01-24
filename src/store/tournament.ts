@@ -213,13 +213,35 @@ function updateBracketWithResult(
     })
   );
 
-  // 次のラウンドに勝者を設定
-  for (let roundIndex = 0; roundIndex < updatedRounds.length - 1; roundIndex++) {
-    const currentRound = updatedRounds[roundIndex];
+  // 同じラウンドのCPU同士の試合を自動的に決着させる
+  const currentRoundIndex = bracket.currentRound - 1;
+  const currentRoundMatches = updatedRounds[currentRoundIndex];
 
-    for (let matchIndex = 0; matchIndex < currentRound.length; matchIndex++) {
-      const match = currentRound[matchIndex];
-      if (match.id !== matchId || !match.winner) continue;
+  for (let matchIndex = 0; matchIndex < currentRoundMatches.length; matchIndex++) {
+    const match = currentRoundMatches[matchIndex];
+    // プレイヤーが参加していない試合で、まだ勝者が決まっていない場合
+    if (!match.hasPlayerTeam && match.winner === null && match.team1 && match.team2) {
+      // ランダムで勝者を決定（team1かteam2）
+      const team1Wins = Math.random() < 0.5;
+      const winner = team1Wins ? match.team1 : match.team2;
+      const winnerScore = Math.floor(Math.random() * 5) + 1;
+      const loserScore = Math.floor(Math.random() * winnerScore);
+
+      updatedRounds[currentRoundIndex][matchIndex] = {
+        ...match,
+        winner,
+        score: `${winnerScore}-${loserScore}`,
+      };
+    }
+  }
+
+  // 次のラウンドに勝者を設定（全試合分）
+  for (let roundIndex = 0; roundIndex < updatedRounds.length - 1; roundIndex++) {
+    const round = updatedRounds[roundIndex];
+
+    for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
+      const match = round[matchIndex];
+      if (!match.winner) continue;
 
       const nextRoundIndex = roundIndex + 1;
       const nextMatchIndex = Math.floor(matchIndex / 2);
@@ -249,8 +271,7 @@ function updateBracketWithResult(
   // 現在のラウンドを更新
   let newCurrentRound = bracket.currentRound;
   if (playerWon) {
-    const currentRoundMatches = updatedRounds[bracket.currentRound - 1];
-    const allMatchesComplete = currentRoundMatches.every((m) => m.winner !== null);
+    const allMatchesComplete = updatedRounds[currentRoundIndex].every((m) => m.winner !== null);
     if (allMatchesComplete && bracket.currentRound < updatedRounds.length) {
       newCurrentRound = bracket.currentRound + 1;
     }

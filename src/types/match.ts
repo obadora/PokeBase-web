@@ -40,8 +40,8 @@ export interface MatchResult {
   teamAScore: number;
   /** 相手チームのスコア */
   teamBScore: number;
-  /** 勝者（"A" = 自チーム, "B" = 相手チーム） */
-  winner: "A" | "B";
+  /** 勝者（"A" = 自チーム, "B" = 相手チーム, "draw" = 引き分け） */
+  winner: "A" | "B" | "draw";
   /** イニング別スコア */
   innings: InningScore[];
   /** 試合のハイライト */

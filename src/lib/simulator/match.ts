@@ -284,10 +284,20 @@ export function simulateMatch(
     ? generateOpponentPitcherStats(opponentPitcher, innings, teamABatters)
     : undefined;
 
+  // 勝者を判定（引き分けも考慮）
+  let winner: "A" | "B" | "draw";
+  if (finalScoreA > finalScoreB) {
+    winner = "A";
+  } else if (finalScoreA < finalScoreB) {
+    winner = "B";
+  } else {
+    winner = "draw";
+  }
+
   return {
     teamAScore: finalScoreA,
     teamBScore: finalScoreB,
-    winner: finalScoreA > finalScoreB ? "A" : "B",
+    winner,
     innings,
     highlights,
     teamAStats,

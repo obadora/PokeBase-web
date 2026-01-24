@@ -32,6 +32,7 @@ import {
   didPlayerWin,
 } from "@/lib/services/tournament";
 import { simulateMatch, calculateTeamPower } from "@/lib/simulator/match";
+import { calculateFielderAbility } from "@/lib/calculator/fielder";
 import { TournamentBracketDisplay } from "@/components/tournament/TournamentBracket";
 import { MatchPreview } from "@/components/tournament/MatchPreview";
 import { OpponentTeamDetail } from "@/components/tournament/OpponentTeamDetail";
@@ -89,6 +90,9 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     setIsHydrated(true);
   }, []);
 
+  // 初回ロード完了フラグ
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+
   // 初期データ読み込み
   useEffect(() => {
     if (!isHydrated) return;
@@ -114,10 +118,11 @@ export default function TournamentPage({ params }: TournamentPageProps) {
         }));
         setTeamMembers(membersWithPokemon);
 
-        // 進行中のトーナメントがあればトーナメント画面へ
-        if (status === "in_progress" && currentBracket) {
+        // 初回ロード時のみ: 進行中のトーナメントがあればトーナメント画面へ
+        if (!initialLoadDone && status === "in_progress" && currentBracket) {
           setPageState("tournament");
         }
+        setInitialLoadDone(true);
       } catch (err) {
         console.error("Failed to load data:", err);
         setError(err instanceof Error ? err.message : "データの読み込みに失敗しました");
@@ -127,7 +132,8 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     }
 
     loadData();
-  }, [teamId, status, currentBracket, isHydrated]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId, isHydrated]);
 
   // 大会が解放されているか確認
   const isTournamentUnlocked = useCallback(
@@ -206,17 +212,24 @@ export default function TournamentPage({ params }: TournamentPageProps) {
 
     // 勝敗に応じた報酬計算
     const isWin = result.winner === "A";
+    const isDraw = result.winner === "draw";
     const rewards = TOURNAMENT_REWARDS[currentBracket.type];
     let reward = 0;
 
     if (isWin) {
       reward = rewards.winReward;
+    } else if (!isDraw) {
+      // 敗北時はマイナス報酬
+      reward = rewards.loseReward;
     }
+    // 引き分け時は報酬なし
 
     setReputationChange(reward);
 
-    // ストアに結果を記録
-    recordMatchResult(nextMatch.id, isWin, result);
+    // 引き分けの場合はストアに記録しない（再試合のため）
+    if (!isDraw) {
+      recordMatchResult(nextMatch.id, isWin, result);
+    }
 
     // イニング進行表示へ（resultではなくplaying）
     setPageState("playing");
@@ -227,44 +240,66 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     setPageState("result");
   };
 
-  // メンバーのパワーを計算
+  // メンバーのパワーを計算（自チームと同じロジックで野球能力値を計算）
   const calculateMemberPower = (member: OpponentMember): number => {
     const stats = member.pokemon.stats;
-    return Math.round(
-      (stats.hp + stats.attack + stats.defense + stats.specialAttack + stats.specialDefense + stats.speed) / 6
-    );
+    const ability = calculateFielderAbility(stats);
+    if (member.position === "pitcher") {
+      // 投手が打席に立つ時は能力低め（野手の70%）
+      return (ability.meet + ability.power) / 2 * 0.7;
+    } else {
+      return (ability.meet + ability.power) / 2;
+    }
   };
 
   // 試合結果を閉じる
   const handleCloseResult = async () => {
-    if (!currentBracket || !team) return;
+    // ストアから最新の状態を取得
+    const latestState = useTournamentStore.getState();
+    const latestBracket = latestState.currentBracket;
+    const latestRecords = latestState.matchRecords;
+
+    if (!latestBracket || !team) return;
 
     const isWin = currentMatchResult?.winner === "A";
-    const rewards = TOURNAMENT_REWARDS[currentBracket.type];
+    const isDraw = currentMatchResult?.winner === "draw";
+    const rewards = TOURNAMENT_REWARDS[latestBracket.type];
 
-    // 評判ポイントを更新
-    if (reputationChange > 0) {
+    // 評判ポイントを更新（勝利・敗北時）
+    if (reputationChange !== 0) {
       await updateTeamReputation(teamId, reputationChange);
-      setTeam((prev) => prev ? { ...prev, reputation: prev.reputation + reputationChange } : null);
+      setTeam((prev) => prev ? { ...prev, reputation: Math.max(0, prev.reputation + reputationChange) } : null);
+    }
+
+    // 引き分けの場合は再試合
+    if (isDraw) {
+      setCurrentMatchResult(null);
+      setReputationChange(0);
+      // currentOpponentは保持して同じ相手と再試合
+      setPageState("tournament");
+      return;
     }
 
     // 敗北した場合
     if (!isWin) {
       // 参加報酬を付与
       const participationReward = rewards.participationReward;
-      await updateTeamReputation(teamId, participationReward);
+      if (participationReward !== 0) {
+        await updateTeamReputation(teamId, participationReward);
+      }
 
-      const totalReward = matchRecords
-        .filter((r) => r.result === "win")
-        .length * rewards.winReward + participationReward;
+      // 敗北時の合計報酬（勝利報酬 + 敗北ペナルティ + 参加報酬）
+      const winCount = latestRecords.filter((r) => r.result === "win").length;
+      const loseCount = latestRecords.filter((r) => r.result === "lose").length;
+      const totalReward = winCount * rewards.winReward + loseCount * rewards.loseReward + participationReward;
 
       completeTournament(false, totalReward);
       setPageState("tournament-complete");
       return;
     }
 
-    // トーナメント完了チェック
-    if (isTournamentComplete(currentBracket) || didPlayerWin(currentBracket)) {
+    // トーナメント完了チェック（最新のブラケットで判定）
+    if (isTournamentComplete(latestBracket) || didPlayerWin(latestBracket)) {
       // 優勝報酬を付与
       await updateTeamReputation(teamId, rewards.championReward);
       setTeam((prev) =>
@@ -272,16 +307,15 @@ export default function TournamentPage({ params }: TournamentPageProps) {
       );
 
       const totalReward =
-        matchRecords.filter((r) => r.result === "win").length * rewards.winReward +
-        rewards.winReward + // 決勝戦分
+        latestRecords.filter((r) => r.result === "win").length * rewards.winReward +
         rewards.championReward;
 
       completeTournament(true, totalReward);
 
       // 次の大会を解放
-      if (currentBracket.type === "district") {
+      if (latestBracket.type === "district") {
         unlockTournament("regional");
-      } else if (currentBracket.type === "regional") {
+      } else if (latestBracket.type === "regional") {
         unlockTournament("national");
       }
 
@@ -364,9 +398,12 @@ export default function TournamentPage({ params }: TournamentPageProps) {
   }
 
   // 試合結果画面
-  if (pageState === "result" && currentMatchResult && currentBracket && currentOpponent) {
+  if (pageState === "result" && currentMatchResult && currentOpponent) {
+    // ストアから最新のブラケットを取得して判定
+    const latestBracket = useTournamentStore.getState().currentBracket;
     const isWin = currentMatchResult.winner === "A";
-    const hasNextMatch = isWin && !isTournamentComplete(currentBracket) && !didPlayerWin(currentBracket);
+    const isDraw = currentMatchResult.winner === "draw";
+    const hasNextMatch = isWin && latestBracket && !isTournamentComplete(latestBracket) && !didPlayerWin(latestBracket);
 
     return (
       <div className="min-h-screen bg-gray-100 py-8">
@@ -378,6 +415,7 @@ export default function TournamentPage({ params }: TournamentPageProps) {
             reputationChange={reputationChange}
             onClose={handleCloseResult}
             onNextMatch={hasNextMatch ? handleNextMatch : undefined}
+            onRematch={isDraw ? handleCloseResult : undefined}
           />
         </div>
       </div>

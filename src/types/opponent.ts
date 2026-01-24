@@ -60,6 +60,8 @@ export interface TournamentReward {
   championReward: number;
   /** 1勝ごとの報酬（評判ポイント） */
   winReward: number;
+  /** 敗北時のペナルティ（評判ポイント、マイナス値） */
+  loseReward: number;
   /** 参加報酬（評判ポイント） */
   participationReward: number;
 }
@@ -67,19 +69,22 @@ export interface TournamentReward {
 /** 大会種別ごとの報酬設定 */
 export const TOURNAMENT_REWARDS: Record<TournamentType, TournamentReward> = {
   district: {
-    championReward: 100,
-    winReward: 20,
-    participationReward: 10,
+    championReward: 30,
+    winReward: 5,
+    loseReward: -10,
+    participationReward: 0,
   },
   regional: {
-    championReward: 300,
-    winReward: 50,
-    participationReward: 30,
+    championReward: 50,
+    winReward: 10,
+    loseReward: -15,
+    participationReward: 0,
   },
   national: {
-    championReward: 1000,
-    winReward: 100,
-    participationReward: 50,
+    championReward: 100,
+    winReward: 20,
+    loseReward: -20,
+    participationReward: 0,
   },
 };
 

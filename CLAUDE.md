@@ -16,6 +16,8 @@ PokeBase-web is a Pokemon baseball team management game. Players build teams by 
 | `npm run build` | 本番用ビルドを作成 |
 | `npm test` | Jestでテストを実行 |
 | `npm run test -- path/to/file.test.ts` | 特定のテストファイルを実行 |
+| `npm run test:watch` | テストをwatchモードで実行 |
+| `npm run test:coverage` | カバレッジ付きでテストを実行 |
 | `npm run validate` | type-check + lint + format:checkをまとめて実行 |
 | `npm run format` | Prettierでコードをフォーマット |
 
