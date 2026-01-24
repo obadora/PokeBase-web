@@ -551,8 +551,9 @@ export function generateOpponentPitcherStats(
  */
 export function getBatterPower(member: TeamMemberWithPokemon): number {
   if (member.position === "pitcher") {
-    const ability = calculatePitcherAbility(member.pokemon.stats);
-    return ability.velocity * 0.3;
+    // 投手も野手能力で打撃力を計算（やや低めに設定）
+    const ability = calculateFielderAbility(member.pokemon.stats);
+    return (ability.meet + ability.power) / 2 * 0.7;
   } else {
     const ability = calculateFielderAbility(member.pokemon.stats);
     return (ability.meet + ability.power) / 2;

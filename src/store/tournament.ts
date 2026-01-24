@@ -1,38 +1,308 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import type {
+  TournamentType,
+  TournamentBracket,
+  TournamentMatch,
+  OpponentTeam,
+} from "@/types/opponent";
+import type { MatchResult } from "@/types/match";
 
-interface Tournament {
-  id: string;
-  team_id: string;
-  tournament_type: "district" | "regional" | "national";
-  status: "in_progress" | "completed" | "failed";
-  current_round: number;
-  created_at: string;
-}
+/** トーナメント進行状態 */
+export type TournamentStatus = "selecting" | "in_progress" | "completed" | "failed";
 
-interface Match {
-  id: string;
-  tournament_id: string;
-  opponent_name: string;
+/** 試合結果記録 */
+export interface MatchRecord {
+  matchId: string;
+  round: number;
+  opponentName: string;
   result: "win" | "lose";
   score: string;
-  date: string;
+  matchResult: MatchResult;
+  playedAt: string;
+}
+
+/** トーナメント履歴 */
+export interface TournamentHistory {
+  id: string;
+  type: TournamentType;
+  status: "completed" | "failed";
+  wins: number;
+  losses: number;
+  isChampion: boolean;
+  rewardEarned: number;
+  completedAt: string;
 }
 
 interface TournamentState {
-  currentTournament: Tournament | null;
-  matches: Match[];
-  setCurrentTournament: (tournament: Tournament | null) => void;
-  setMatches: (matches: Match[]) => void;
-  addMatch: (match: Match) => void;
+  // 現在のトーナメント
+  currentBracket: TournamentBracket | null;
+  status: TournamentStatus;
+  teamId: string | null;
+
+  // 試合記録
+  matchRecords: MatchRecord[];
+
+  // 過去のトーナメント履歴
+  tournamentHistory: TournamentHistory[];
+
+  // 解放済み大会
+  unlockedTournaments: TournamentType[];
+
+  // アクション
+  startTournament: (bracket: TournamentBracket, teamId: string) => void;
+  recordMatchResult: (
+    matchId: string,
+    playerWon: boolean,
+    matchResult: MatchResult
+  ) => void;
+  completeTournament: (isChampion: boolean, rewardEarned: number) => void;
+  clearCurrentTournament: () => void;
+  unlockTournament: (type: TournamentType) => void;
+  hasChampionship: (type: TournamentType) => boolean;
 }
 
 /**
  * トーナメント状態を管理するZustandストア
+ * persistミドルウェアでlocalStorageに保存
  */
-export const useTournamentStore = create<TournamentState>((set) => ({
-  currentTournament: null,
-  matches: [],
-  setCurrentTournament: (tournament) => set({ currentTournament: tournament }),
-  setMatches: (matches) => set({ matches }),
-  addMatch: (match) => set((state) => ({ matches: [...state.matches, match] })),
-}));
+export const useTournamentStore = create<TournamentState>()(
+  persist(
+    (set, get) => ({
+      currentBracket: null,
+      status: "selecting",
+      teamId: null,
+      matchRecords: [],
+      tournamentHistory: [],
+      unlockedTournaments: ["district"],
+
+      startTournament: (bracket, teamId) =>
+        set({
+          currentBracket: bracket,
+          status: "in_progress",
+          teamId,
+          matchRecords: [],
+        }),
+
+      recordMatchResult: (matchId, playerWon, matchResult) => {
+        const state = get();
+        if (!state.currentBracket) return;
+
+        // ブラケットを更新
+        const updatedBracket = updateBracketWithResult(
+          state.currentBracket,
+          matchId,
+          playerWon,
+          matchResult
+        );
+
+        // 試合記録を追加
+        const match = findMatchById(state.currentBracket, matchId);
+        if (!match) return;
+
+        const opponent = getOpponentFromMatch(match);
+        const newRecord: MatchRecord = {
+          matchId,
+          round: match.round,
+          opponentName: opponent?.name ?? "不明",
+          result: playerWon ? "win" : "lose",
+          score: `${matchResult.teamAScore}-${matchResult.teamBScore}`,
+          matchResult,
+          playedAt: new Date().toISOString(),
+        };
+
+        // 敗北した場合はトーナメント終了
+        const newStatus = playerWon ? "in_progress" : "failed";
+
+        set({
+          currentBracket: updatedBracket,
+          matchRecords: [...state.matchRecords, newRecord],
+          status: newStatus,
+        });
+      },
+
+      completeTournament: (isChampion, rewardEarned) => {
+        const state = get();
+        if (!state.currentBracket) return;
+
+        const wins = state.matchRecords.filter((r) => r.result === "win").length;
+        const losses = state.matchRecords.filter((r) => r.result === "lose").length;
+
+        const history: TournamentHistory = {
+          id: state.currentBracket.id,
+          type: state.currentBracket.type,
+          status: isChampion ? "completed" : "failed",
+          wins,
+          losses,
+          isChampion,
+          rewardEarned,
+          completedAt: new Date().toISOString(),
+        };
+
+        set({
+          status: "completed",
+          tournamentHistory: [...state.tournamentHistory, history],
+        });
+      },
+
+      clearCurrentTournament: () =>
+        set({
+          currentBracket: null,
+          status: "selecting",
+          teamId: null,
+          matchRecords: [],
+        }),
+
+      unlockTournament: (type) => {
+        const state = get();
+        if (!state.unlockedTournaments.includes(type)) {
+          set({
+            unlockedTournaments: [...state.unlockedTournaments, type],
+          });
+        }
+      },
+
+      hasChampionship: (type) => {
+        const state = get();
+        return state.tournamentHistory.some(
+          (h) => h.type === type && h.isChampion
+        );
+      },
+    }),
+    {
+      name: "tournament-storage",
+      storage: createJSONStorage(() => {
+        // SSR時はダミーストレージを返す
+        if (typeof window === "undefined") {
+          return {
+            getItem: () => null,
+            setItem: () => {},
+            removeItem: () => {},
+          };
+        }
+        return localStorage;
+      }),
+      partialize: (state) => ({
+        tournamentHistory: state.tournamentHistory,
+        unlockedTournaments: state.unlockedTournaments,
+      }),
+      skipHydration: true,
+    }
+  )
+);
+
+/**
+ * ブラケットを試合結果で更新
+ */
+function updateBracketWithResult(
+  bracket: TournamentBracket,
+  matchId: string,
+  playerWon: boolean,
+  matchResult: MatchResult
+): TournamentBracket {
+  const updatedRounds = bracket.rounds.map((round) =>
+    round.map((match) => {
+      if (match.id !== matchId) return match;
+
+      const opponent = getOpponentFromMatch(match);
+      return {
+        ...match,
+        winner: playerWon ? ("player" as const) : opponent,
+        score: `${matchResult.teamAScore}-${matchResult.teamBScore}`,
+      };
+    })
+  );
+
+  // 同じラウンドのCPU同士の試合を自動的に決着させる
+  const currentRoundIndex = bracket.currentRound - 1;
+  const currentRoundMatches = updatedRounds[currentRoundIndex];
+
+  for (let matchIndex = 0; matchIndex < currentRoundMatches.length; matchIndex++) {
+    const match = currentRoundMatches[matchIndex];
+    // プレイヤーが参加していない試合で、まだ勝者が決まっていない場合
+    if (!match.hasPlayerTeam && match.winner === null && match.team1 && match.team2) {
+      // ランダムで勝者を決定（team1かteam2）
+      const team1Wins = Math.random() < 0.5;
+      const winner = team1Wins ? match.team1 : match.team2;
+      const winnerScore = Math.floor(Math.random() * 5) + 1;
+      const loserScore = Math.floor(Math.random() * winnerScore);
+
+      updatedRounds[currentRoundIndex][matchIndex] = {
+        ...match,
+        winner,
+        score: `${winnerScore}-${loserScore}`,
+      };
+    }
+  }
+
+  // 次のラウンドに勝者を設定（全試合分）
+  for (let roundIndex = 0; roundIndex < updatedRounds.length - 1; roundIndex++) {
+    const round = updatedRounds[roundIndex];
+
+    for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
+      const match = round[matchIndex];
+      if (!match.winner) continue;
+
+      const nextRoundIndex = roundIndex + 1;
+      const nextMatchIndex = Math.floor(matchIndex / 2);
+      const nextMatch = updatedRounds[nextRoundIndex]?.[nextMatchIndex];
+
+      if (nextMatch) {
+        const isFirstTeam = matchIndex % 2 === 0;
+        const winnerTeam = match.winner === "player" ? null : match.winner;
+
+        if (isFirstTeam) {
+          updatedRounds[nextRoundIndex][nextMatchIndex] = {
+            ...nextMatch,
+            team1: winnerTeam,
+            hasPlayerTeam: nextMatch.hasPlayerTeam || match.winner === "player",
+          };
+        } else {
+          updatedRounds[nextRoundIndex][nextMatchIndex] = {
+            ...nextMatch,
+            team2: winnerTeam,
+            hasPlayerTeam: nextMatch.hasPlayerTeam || match.winner === "player",
+          };
+        }
+      }
+    }
+  }
+
+  // 現在のラウンドを更新
+  let newCurrentRound = bracket.currentRound;
+  if (playerWon) {
+    const allMatchesComplete = updatedRounds[currentRoundIndex].every((m) => m.winner !== null);
+    if (allMatchesComplete && bracket.currentRound < updatedRounds.length) {
+      newCurrentRound = bracket.currentRound + 1;
+    }
+  }
+
+  return {
+    ...bracket,
+    rounds: updatedRounds,
+    currentRound: newCurrentRound,
+  };
+}
+
+/**
+ * 試合IDから試合を検索
+ */
+function findMatchById(
+  bracket: TournamentBracket,
+  matchId: string
+): TournamentMatch | null {
+  for (const round of bracket.rounds) {
+    for (const match of round) {
+      if (match.id === matchId) return match;
+    }
+  }
+  return null;
+}
+
+/**
+ * 試合から対戦相手を取得
+ */
+function getOpponentFromMatch(match: TournamentMatch): OpponentTeam | null {
+  if (match.team1 === null) return match.team2;
+  return match.team1;
+}

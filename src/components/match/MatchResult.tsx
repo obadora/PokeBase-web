@@ -13,6 +13,7 @@ interface MatchResultProps {
   reputationChange: number;
   onClose: () => void;
   onNextMatch?: () => void;
+  onRematch?: () => void;
 }
 
 type ResultTab = "summary" | "teamABatters" | "teamBBatters" | "pitchers";
@@ -27,8 +28,10 @@ export function MatchResultDisplay({
   reputationChange,
   onClose,
   onNextMatch,
+  onRematch,
 }: MatchResultProps) {
   const isWin = result.winner === "A";
+  const isDraw = result.winner === "draw";
   const [activeTab, setActiveTab] = useState<ResultTab>("summary");
 
   const tabs: { id: ResultTab; label: string }[] = [
@@ -45,12 +48,14 @@ export function MatchResultDisplay({
         <h2 className="text-2xl font-bold mb-2">試合結果</h2>
         <div
           className={`inline-block px-4 py-2 rounded-full text-lg font-bold ${
-            isWin
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
+            isDraw
+              ? "bg-yellow-100 text-yellow-700"
+              : isWin
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
           }`}
         >
-          {isWin ? "勝利!" : "敗北..."}
+          {isDraw ? "引き分け" : isWin ? "勝利!" : "敗北..."}
         </div>
       </div>
 
@@ -103,6 +108,7 @@ export function MatchResultDisplay({
             result={result}
             reputationChange={reputationChange}
             isWin={isWin}
+            isDraw={isDraw}
           />
         )}
 
@@ -154,18 +160,28 @@ export function MatchResultDisplay({
 
       {/* アクションボタン */}
       <div className="flex gap-3 justify-center pt-4 border-t border-gray-200">
-        <button
-          onClick={onClose}
-          className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
-        >
-          戻る
-        </button>
+        {!onRematch && (
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+          >
+            戻る
+          </button>
+        )}
         {onNextMatch && (
           <button
             onClick={onNextMatch}
             className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
           >
             次の試合へ
+          </button>
+        )}
+        {onRematch && (
+          <button
+            onClick={onRematch}
+            className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors"
+          >
+            再試合
           </button>
         )}
       </div>
@@ -182,12 +198,14 @@ function SummaryTab({
   result,
   reputationChange,
   isWin,
+  isDraw,
 }: {
   teamAName: string;
   teamBName: string;
   result: MatchResult;
   reputationChange: number;
   isWin: boolean;
+  isDraw: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -229,17 +247,27 @@ function SummaryTab({
 
       {/* 評判ポイント変動 */}
       <div className="text-center">
-        <div
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
-            isWin ? "bg-yellow-50 text-yellow-700" : "bg-gray-50 text-gray-600"
-          }`}
-        >
-          <span className="text-lg">評判:</span>
-          <span className="text-xl font-bold">
-            {reputationChange > 0 ? "+" : ""}
-            {reputationChange}pt
-          </span>
-        </div>
+        {isDraw ? (
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-50 text-yellow-700">
+            <span className="text-lg">再試合が必要です</span>
+          </div>
+        ) : (
+          <div
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
+              reputationChange > 0
+                ? "bg-yellow-50 text-yellow-700"
+                : reputationChange < 0
+                  ? "bg-red-50 text-red-700"
+                  : "bg-gray-50 text-gray-600"
+            }`}
+          >
+            <span className="text-lg">評判:</span>
+            <span className="text-xl font-bold">
+              {reputationChange > 0 ? "+" : ""}
+              {reputationChange}pt
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
