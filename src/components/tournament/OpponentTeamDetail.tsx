@@ -78,13 +78,7 @@ function MemberCard({
 }
 
 // メンバー詳細モーダル
-function MemberDetailModal({
-  member,
-  onClose,
-}: {
-  member: OpponentMember;
-  onClose: () => void;
-}) {
+function MemberDetailModal({ member, onClose }: { member: OpponentMember; onClose: () => void }) {
   const modalRef = useRef<HTMLDivElement>(null);
   const { pokemon, position, battingOrder } = member;
   const isPitcher = position === "pitcher";
@@ -165,9 +159,7 @@ function MemberDetailModal({
               )}
             </div>
             <div>
-              <h3 className="font-bold text-gray-800">
-                {pokemon.nameJa || pokemon.name}
-              </h3>
+              <h3 className="font-bold text-gray-800">{pokemon.nameJa || pokemon.name}</h3>
               <div className="flex gap-2 mt-1">
                 <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">
                   {POSITION_NAMES_JA[position]}
@@ -190,12 +182,19 @@ function MemberDetailModal({
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-red-100 rounded-full transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <button onClick={onClose} className="p-2 hover:bg-red-100 rounded-full transition-colors">
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>

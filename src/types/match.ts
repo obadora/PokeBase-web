@@ -4,6 +4,20 @@
 
 import type { Position } from "./position";
 
+/** 塁上のランナー情報 */
+export interface BaseRunner {
+  batterIndex: number;
+  name: string;
+  spriteUrl: string | null;
+}
+
+/** 塁の状態 */
+export interface BasesState {
+  first: BaseRunner | null;
+  second: BaseRunner | null;
+  third: BaseRunner | null;
+}
+
 /** 試合結果 */
 export type MatchResultType = "win" | "lose";
 
@@ -74,8 +88,23 @@ export type AtBatResult =
   | "triple" // 三塁打
   | "homerun" // 本塁打
   | "strikeout" // 三振
-  | "groundout" // ゴロアウト
-  | "flyout" // フライアウト
+  // ゴロアウト（ポジション別）
+  | "groundout_pitcher" // ピッチャーゴロ
+  | "groundout_catcher" // キャッチャーゴロ
+  | "groundout_first" // ファーストゴロ
+  | "groundout_second" // セカンドゴロ
+  | "groundout_third" // サードゴロ
+  | "groundout_shortstop" // ショートゴロ
+  // フライアウト（ポジション別）
+  | "flyout_pitcher" // ピッチャーフライ
+  | "flyout_catcher" // キャッチャーフライ
+  | "flyout_first" // ファーストフライ
+  | "flyout_second" // セカンドフライ
+  | "flyout_third" // サードフライ
+  | "flyout_shortstop" // ショートフライ
+  | "flyout_left" // レフトフライ
+  | "flyout_center" // センターフライ
+  | "flyout_right" // ライトフライ
   | "walk" // 四球
   | "hitByPitch" // 死球
   | "sacrifice" // 犠打
@@ -85,20 +114,68 @@ export type AtBatResult =
 
 /** 打席結果の日本語表示 */
 export const AT_BAT_RESULT_LABELS: Record<AtBatResult, string> = {
-  single: "安",
-  double: "二",
-  triple: "三",
-  homerun: "本",
+  single: "安打",
+  double: "二塁打",
+  triple: "三塁打",
+  homerun: "本塁打",
   strikeout: "三振",
-  groundout: "ゴ",
-  flyout: "飛",
-  walk: "四",
-  hitByPitch: "死",
+  // ゴロアウト
+  groundout_pitcher: "投ゴロ",
+  groundout_catcher: "捕ゴロ",
+  groundout_first: "一ゴロ",
+  groundout_second: "二ゴロ",
+  groundout_third: "三ゴロ",
+  groundout_shortstop: "遊ゴロ",
+  // フライアウト
+  flyout_pitcher: "投フライ",
+  flyout_catcher: "捕フライ",
+  flyout_first: "一フライ",
+  flyout_second: "二フライ",
+  flyout_third: "三フライ",
+  flyout_shortstop: "遊フライ",
+  flyout_left: "左フライ",
+  flyout_center: "中フライ",
+  flyout_right: "右フライ",
+  walk: "四球",
+  hitByPitch: "死球",
   sacrifice: "犠打",
   sacrificeFly: "犠飛",
-  error: "失",
+  error: "失策",
   fieldersChoice: "野選",
 };
+
+/** ゴロアウトの結果一覧 */
+export const GROUNDOUT_RESULTS: AtBatResult[] = [
+  "groundout_pitcher",
+  "groundout_catcher",
+  "groundout_first",
+  "groundout_second",
+  "groundout_third",
+  "groundout_shortstop",
+];
+
+/** フライアウトの結果一覧 */
+export const FLYOUT_RESULTS: AtBatResult[] = [
+  "flyout_pitcher",
+  "flyout_catcher",
+  "flyout_first",
+  "flyout_second",
+  "flyout_third",
+  "flyout_shortstop",
+  "flyout_left",
+  "flyout_center",
+  "flyout_right",
+];
+
+/** ゴロアウトかどうか判定 */
+export function isGroundout(result: AtBatResult): boolean {
+  return GROUNDOUT_RESULTS.includes(result);
+}
+
+/** フライアウトかどうか判定 */
+export function isFlyout(result: AtBatResult): boolean {
+  return FLYOUT_RESULTS.includes(result);
+}
 
 /** 打者の打席結果（1打席分） */
 export interface AtBat {
@@ -109,6 +186,24 @@ export interface AtBat {
   run: boolean; // 得点したか
   stolenBase: boolean; // 盗塁
   caughtStealing: boolean; // 盗塁死
+  /** 打席前のアウトカウント */
+  outsBeforeAtBat?: number;
+  /** 打席後のアウトカウント */
+  outsAfterAtBat?: number;
+  /** 打席前の塁状態 */
+  basesBeforeAtBat?: BasesState;
+  /** 打席後の塁状態 */
+  basesAfterAtBat?: BasesState;
+  /** 打者情報 */
+  batter?: {
+    index: number;
+    name: string;
+    spriteUrl: string | null;
+  };
+  /** 得点したランナー */
+  scoredRunners?: BaseRunner[];
+  /** ハーフイニング内の打席順序（0始まり） */
+  atBatOrderInHalfInning?: number;
 }
 
 /** 打者の試合成績 */
@@ -199,4 +294,3 @@ export const DEFAULT_MATCH_CONFIG: MatchConfig = {
   innings: 9,
   randomFactor: 5,
 };
-

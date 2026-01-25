@@ -147,8 +147,18 @@ function MemberDetailModal({
             onClick={onClose}
             className="p-2 hover:bg-gray-200 rounded-full transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -172,7 +182,9 @@ function MemberDetailModal({
                       style={{ width: `${ability.value}%` }}
                     />
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 w-6 text-right">{ability.value}</span>
+                  <span className="text-xs font-semibold text-gray-700 w-6 text-right">
+                    {ability.value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -198,7 +210,9 @@ function MemberDetailModal({
                     style={{ width: `${ability.value}%` }}
                   />
                 </div>
-                <span className="text-xs font-semibold text-gray-700 w-6 text-right">{ability.value}</span>
+                <span className="text-xs font-semibold text-gray-700 w-6 text-right">
+                  {ability.value}
+                </span>
               </div>
             ))}
           </div>
@@ -719,9 +733,7 @@ export default function FormationPage({ params }: FormationPageProps) {
               </button>
             </div>
             {unassignedForBatting.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">
-                未配置の選手がいません
-              </p>
+              <p className="text-sm text-gray-400 text-center py-4">未配置の選手がいません</p>
             ) : (
               <div className="space-y-2">
                 {unassignedForBatting.map((member) => (
@@ -761,7 +773,12 @@ export default function FormationPage({ params }: FormationPageProps) {
                       }}
                       className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"

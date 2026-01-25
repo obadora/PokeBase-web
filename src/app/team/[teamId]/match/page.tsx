@@ -17,10 +17,7 @@ import { simulateMatch, calculateTeamPower } from "@/lib/simulator/match";
 import { generateRandomOpponent } from "@/lib/simulator/opponent";
 import { MatchResultDisplay } from "@/components/match/MatchResult";
 import { MatchProgress } from "@/components/match/MatchProgress";
-import {
-  getOrCreatePracticeMatch,
-  saveMatchResult,
-} from "@/lib/supabase/match";
+import { getOrCreatePracticeMatch, saveMatchResult } from "@/lib/supabase/match";
 
 type MatchState = "idle" | "preparing" | "playing" | "result";
 
@@ -105,8 +102,7 @@ export default function MatchPage({ params }: MatchPageProps) {
     setMatchResult(result);
 
     // 評判ポイント計算
-    const points =
-      result.winner === "A" ? REPUTATION_POINTS.WIN : REPUTATION_POINTS.LOSS;
+    const points = result.winner === "A" ? REPUTATION_POINTS.WIN : REPUTATION_POINTS.LOSS;
     setReputationChange(points);
 
     // 試合進行表示へ
@@ -121,7 +117,9 @@ export default function MatchPage({ params }: MatchPageProps) {
     try {
       // 評判ポイント更新
       await updateTeamReputation(teamId, reputationChange);
-      setTeam((prev) => (prev ? { ...prev, reputation: prev.reputation + reputationChange } : null));
+      setTeam((prev) =>
+        prev ? { ...prev, reputation: prev.reputation + reputationChange } : null
+      );
 
       // 試合結果保存
       const { data: tournament } = await getOrCreatePracticeMatch(teamId);
@@ -228,9 +226,7 @@ export default function MatchPage({ params }: MatchPageProps) {
           <>
             {/* チーム戦力表示 */}
             <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-              <h2 className="text-lg font-bold text-gray-800 mb-3">
-                {team.team_name}
-              </h2>
+              <h2 className="text-lg font-bold text-gray-800 mb-3">{team.team_name}</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-500">総合戦力</p>
@@ -270,9 +266,7 @@ export default function MatchPage({ params }: MatchPageProps) {
               練習試合を始める
             </button>
             {starters.length < 9 && (
-              <p className="text-center text-sm text-red-500 mt-2">
-                スタメンが9人揃っていません
-              </p>
+              <p className="text-center text-sm text-red-500 mt-2">スタメンが9人揃っていません</p>
             )}
           </>
         )}
@@ -281,9 +275,7 @@ export default function MatchPage({ params }: MatchPageProps) {
           <>
             {/* 対戦カード */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h2 className="text-center text-lg font-bold text-gray-800 mb-6">
-                対戦カード
-              </h2>
+              <h2 className="text-center text-lg font-bold text-gray-800 mb-6">対戦カード</h2>
               <div className="flex items-center justify-center gap-4">
                 <div className="text-center flex-1">
                   <div className="text-4xl mb-2">&#9918;</div>

@@ -35,9 +35,7 @@ function randomInt(min: number, max: number): number {
 /**
  * チームの総合戦力を計算
  */
-export function calculateTeamPower(
-  members: TeamMemberWithPokemon[]
-): TeamPower {
+export function calculateTeamPower(members: TeamMemberWithPokemon[]): TeamPower {
   // スターティングメンバーのみを対象
   const starters = members.filter((m) => m.is_starter);
 
@@ -53,9 +51,7 @@ export function calculateTeamPower(
       return (ability.meet + ability.power + ability.speed) / 3;
     });
   const offense =
-    offenseScores.length > 0
-      ? offenseScores.reduce((a, b) => a + b, 0) / offenseScores.length
-      : 0;
+    offenseScores.length > 0 ? offenseScores.reduce((a, b) => a + b, 0) / offenseScores.length : 0;
 
   // 守備力（野手の守備系能力の平均）
   const defenseScores = starters
@@ -65,22 +61,14 @@ export function calculateTeamPower(
       return (ability.defense + ability.arm + ability.speed) / 3;
     });
   const defense =
-    defenseScores.length > 0
-      ? defenseScores.reduce((a, b) => a + b, 0) / defenseScores.length
-      : 0;
+    defenseScores.length > 0 ? defenseScores.reduce((a, b) => a + b, 0) / defenseScores.length : 0;
 
   // 投手力
   const pitcher = starters.find((m) => m.position === "pitcher");
   const pitching = pitcher
     ? (() => {
         const ability = calculatePitcherAbility(pitcher.pokemon.stats);
-        return (
-          (ability.velocity +
-            ability.control +
-            ability.breaking +
-            ability.stamina) /
-          4
-        );
+        return (ability.velocity + ability.control + ability.breaking + ability.stamina) / 4;
       })()
     : 0;
 
@@ -104,12 +92,7 @@ function generateHighlights(
   teamBName: string
 ): MatchHighlight[] {
   const highlights: MatchHighlight[] = [];
-  const highlightTypes: MatchHighlight["type"][] = [
-    "hit",
-    "homerun",
-    "strikeout",
-    "defense",
-  ];
+  const highlightTypes: MatchHighlight["type"][] = ["hit", "homerun", "strikeout", "defense"];
 
   for (const inning of innings) {
     // スキップされたイニングは処理しない
@@ -123,11 +106,7 @@ function generateHighlights(
           : highlightTypes[randomInt(0, highlightTypes.length - 1)];
       highlights.push({
         inning: inning.inning,
-        description: generateHighlightDescription(
-          type,
-          teamAName,
-          inning.teamAScore
-        ),
+        description: generateHighlightDescription(type, teamAName, inning.teamAScore),
         type,
       });
     }
@@ -139,21 +118,13 @@ function generateHighlights(
           : highlightTypes[randomInt(0, highlightTypes.length - 1)];
       highlights.push({
         inning: inning.inning,
-        description: generateHighlightDescription(
-          type,
-          teamBName,
-          inning.teamBScore
-        ),
+        description: generateHighlightDescription(type, teamBName, inning.teamBScore),
         type,
       });
     }
 
     // 無得点のイニングでも時々ハイライトを追加
-    if (
-      inning.teamAScore === 0 &&
-      inning.teamBScore === 0 &&
-      Math.random() < 0.3
-    ) {
+    if (inning.teamAScore === 0 && inning.teamBScore === 0 && Math.random() < 0.3) {
       const defenseTeam = Math.random() < 0.5 ? teamAName : teamBName;
       highlights.push({
         inning: inning.inning,
@@ -191,18 +162,9 @@ function generateHighlightDescription(
 /**
  * イニングデータからチームの統計情報を集計
  */
-function calculateTeamStatsFromInnings(
-  innings: InningScore[],
-  team: "A" | "B"
-): TeamStats {
-  const runs = innings.reduce(
-    (sum, i) => sum + (team === "A" ? i.teamAScore : i.teamBScore),
-    0
-  );
-  const hits = innings.reduce(
-    (sum, i) => sum + (team === "A" ? i.teamAHits : i.teamBHits),
-    0
-  );
+function calculateTeamStatsFromInnings(innings: InningScore[], team: "A" | "B"): TeamStats {
+  const runs = innings.reduce((sum, i) => sum + (team === "A" ? i.teamAScore : i.teamBScore), 0);
+  const hits = innings.reduce((sum, i) => sum + (team === "A" ? i.teamAHits : i.teamBHits), 0);
   const errors = innings.reduce(
     (sum, i) => sum + (team === "A" ? i.teamAErrors : i.teamBErrors),
     0
@@ -228,14 +190,10 @@ export function simulateMatch(
 
   // 投手を取得
   const teamAPitcherMember = teamAStarters.find((m) => m.position === "pitcher");
-  const opponentPitcher = opponentTeam.members.find(
-    (m) => m.position === "pitcher"
-  );
+  const opponentPitcher = opponentTeam.members.find((m) => m.position === "pitcher");
 
   // 投手の能力値を計算
-  const teamAPitcherPower = teamAPitcherMember
-    ? getPitcherPower(teamAPitcherMember)
-    : 50;
+  const teamAPitcherPower = teamAPitcherMember ? getPitcherPower(teamAPitcherMember) : 50;
   const teamBPitcherPower = opponentPitcher ? opponentPitcher.power : 50;
 
   // 打者データを準備
@@ -271,10 +229,7 @@ export function simulateMatch(
 
   // 打者成績を生成
   const teamABatters = generateBatterStats(teamAMembers, teamAAtBats);
-  const teamBBatters = generateOpponentBatterStats(
-    opponentTeam.members,
-    teamBAtBats
-  );
+  const teamBBatters = generateOpponentBatterStats(opponentTeam.members, teamBAtBats);
 
   // 投手成績を生成（打者成績から導出して整合性を保つ）
   const teamAPitcher = teamAPitcherMember

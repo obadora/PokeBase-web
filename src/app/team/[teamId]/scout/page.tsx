@@ -19,7 +19,12 @@ import {
   getPointsToNextRank,
   REPUTATION_POINTS,
 } from "@/types/reputation";
-import { getTeamById, getTeamMembers, updateTeamReputation, addTeamMembers } from "@/lib/supabase/team";
+import {
+  getTeamById,
+  getTeamMembers,
+  updateTeamReputation,
+  addTeamMembers,
+} from "@/lib/supabase/team";
 import { getAllPokemon } from "@/lib/services/pokemon-data";
 import { generateScoutCandidates, ScoutCandidate } from "@/lib/services/scout";
 
@@ -221,8 +226,18 @@ export default function ScoutPage({ params }: ScoutPageProps) {
             href={`/team/${teamId}`}
             className="p-2 hover:bg-white rounded-full transition-colors"
           >
-            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-6 h-6 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </Link>
           <div className="flex-grow">
@@ -250,9 +265,7 @@ export default function ScoutPage({ params }: ScoutPageProps) {
                 {reputationRank}
               </span>
               {pointsToNext !== null && (
-                <p className="text-xs text-gray-500 mt-1">
-                  次のランクまで: {pointsToNext}pt
-                </p>
+                <p className="text-xs text-gray-500 mt-1">次のランクまで: {pointsToNext}pt</p>
               )}
             </div>
           </div>
@@ -283,9 +296,7 @@ export default function ScoutPage({ params }: ScoutPageProps) {
         {message && (
           <div
             className={`mb-4 p-3 rounded-lg text-sm ${
-              message.type === "success"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
+              message.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
             }`}
           >
             {message.text}
@@ -316,7 +327,9 @@ export default function ScoutPage({ params }: ScoutPageProps) {
                 />
               </svg>
               <span>候補を更新</span>
-              <span className="text-xs text-gray-500">(-{REPUTATION_POINTS.SCOUT_REFRESH_COST}pt)</span>
+              <span className="text-xs text-gray-500">
+                (-{REPUTATION_POINTS.SCOUT_REFRESH_COST}pt)
+              </span>
             </button>
           </div>
 
@@ -394,9 +407,7 @@ function CandidateCard({
 
         {/* 情報 */}
         <div className="flex-grow min-w-0">
-          <h3 className="font-bold text-gray-800 truncate">
-            {pokemon.nameJa || pokemon.name}
-          </h3>
+          <h3 className="font-bold text-gray-800 truncate">{pokemon.nameJa || pokemon.name}</h3>
           <div className="flex items-center gap-2 mt-1">
             <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
               {POSITION_NAMES_JA[bestPosition as Position]}
@@ -406,9 +417,7 @@ function CandidateCard({
               {"☆".repeat(5 - positionFitness.stars)}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            適性スコア: {positionFitness.score}
-          </p>
+          <p className="text-xs text-gray-500 mt-1">適性スコア: {positionFitness.score}</p>
         </div>
 
         {/* スカウトボタン */}

@@ -67,11 +67,7 @@ export function filterByType(allPokemon: Pokemon[], typeName: string): Pokemon[]
  * @param maxAvg 最大平均値
  * @returns フィルタリングされたポケモンリスト
  */
-export function filterByStatsRange(
-  pokemon: Pokemon[],
-  minAvg: number,
-  maxAvg: number
-): Pokemon[] {
+export function filterByStatsRange(pokemon: Pokemon[], minAvg: number, maxAvg: number): Pokemon[] {
   return pokemon.filter((p) => {
     const avg = calculateAverageStats(p);
     return avg >= minAvg && avg <= maxAvg;
@@ -214,7 +210,11 @@ export function generateDistrictTeam(
 
   // 候補が9匹未満の場合は範囲を広げる
   if (filtered.length < 9) {
-    filtered = filterByStatsRange(candidates, config.minAverageStats - 20, config.maxAverageStats + 20);
+    filtered = filterByStatsRange(
+      candidates,
+      config.minAverageStats - 20,
+      config.maxAverageStats + 20
+    );
   }
 
   // それでも足りない場合はタイプフィルタのみ
@@ -268,7 +268,11 @@ export function generateRegionalTeam(
 
   // 候補が9匹未満の場合は範囲を広げる
   if (filtered.length < 9) {
-    filtered = filterByStatsRange(candidates, config.minAverageStats - 15, config.maxAverageStats + 15);
+    filtered = filterByStatsRange(
+      candidates,
+      config.minAverageStats - 15,
+      config.maxAverageStats + 15
+    );
   }
 
   if (filtered.length < 9) {

@@ -132,7 +132,7 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     }
 
     loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, isHydrated]);
 
   // 大会が解放されているか確認
@@ -187,26 +187,20 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     setCurrentOpponent(opponent);
 
     // OpponentMember を MatchOpponentMember に変換
-    const convertedMembers: MatchOpponentMember[] = opponent.members.map(
-      (m: OpponentMember) => ({
-        name: m.pokemon.nameJa || m.pokemon.name,
-        position: m.position,
-        power: calculateMemberPower(m),
-        pokemonId: m.pokemon.id,
-        spriteUrl: m.pokemon.sprites.frontDefault,
-      })
-    );
+    const convertedMembers: MatchOpponentMember[] = opponent.members.map((m: OpponentMember) => ({
+      name: m.pokemon.nameJa || m.pokemon.name,
+      position: m.position,
+      power: calculateMemberPower(m),
+      pokemonId: m.pokemon.id,
+      spriteUrl: m.pokemon.sprites.frontDefault,
+    }));
 
     // 試合シミュレーション（先に計算）
-    const result = simulateMatch(
-      teamMembers,
-      team.team_name,
-      {
-        name: opponent.name,
-        power: opponent.averageStats,
-        members: convertedMembers,
-      }
-    );
+    const result = simulateMatch(teamMembers, team.team_name, {
+      name: opponent.name,
+      power: opponent.averageStats,
+      members: convertedMembers,
+    });
 
     setCurrentMatchResult(result);
 
@@ -246,7 +240,7 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     const ability = calculateFielderAbility(stats);
     if (member.position === "pitcher") {
       // 投手が打席に立つ時は能力低め（野手の70%）
-      return (ability.meet + ability.power) / 2 * 0.7;
+      return ((ability.meet + ability.power) / 2) * 0.7;
     } else {
       return (ability.meet + ability.power) / 2;
     }
@@ -268,7 +262,9 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     // 評判ポイントを更新（勝利・敗北時）
     if (reputationChange !== 0) {
       await updateTeamReputation(teamId, reputationChange);
-      setTeam((prev) => prev ? { ...prev, reputation: Math.max(0, prev.reputation + reputationChange) } : null);
+      setTeam((prev) =>
+        prev ? { ...prev, reputation: Math.max(0, prev.reputation + reputationChange) } : null
+      );
     }
 
     // 引き分けの場合は再試合
@@ -291,7 +287,8 @@ export default function TournamentPage({ params }: TournamentPageProps) {
       // 敗北時の合計報酬（勝利報酬 + 敗北ペナルティ + 参加報酬）
       const winCount = latestRecords.filter((r) => r.result === "win").length;
       const loseCount = latestRecords.filter((r) => r.result === "lose").length;
-      const totalReward = winCount * rewards.winReward + loseCount * rewards.loseReward + participationReward;
+      const totalReward =
+        winCount * rewards.winReward + loseCount * rewards.loseReward + participationReward;
 
       completeTournament(false, totalReward);
       setPageState("tournament-complete");
@@ -403,7 +400,11 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     const latestBracket = useTournamentStore.getState().currentBracket;
     const isWin = currentMatchResult.winner === "A";
     const isDraw = currentMatchResult.winner === "draw";
-    const hasNextMatch = isWin && latestBracket && !isTournamentComplete(latestBracket) && !didPlayerWin(latestBracket);
+    const hasNextMatch =
+      isWin &&
+      latestBracket &&
+      !isTournamentComplete(latestBracket) &&
+      !didPlayerWin(latestBracket);
 
     return (
       <div className="min-h-screen bg-gray-100 py-8">
@@ -482,8 +483,7 @@ export default function TournamentPage({ params }: TournamentPageProps) {
             {isChampion && currentBracket.type !== "national" && (
               <div className="bg-blue-50 rounded-lg p-4 mb-6">
                 <p className="text-blue-700">
-                  🎉{" "}
-                  {currentBracket.type === "district" ? "地方大会" : "全国大会"}
+                  🎉 {currentBracket.type === "district" ? "地方大会" : "全国大会"}
                   が解放されました！
                 </p>
               </div>
@@ -548,9 +548,7 @@ export default function TournamentPage({ params }: TournamentPageProps) {
               return (
                 <div
                   key={type}
-                  className={`bg-white rounded-xl shadow-md p-6 ${
-                    !unlocked ? "opacity-60" : ""
-                  }`}
+                  className={`bg-white rounded-xl shadow-md p-6 ${!unlocked ? "opacity-60" : ""}`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -589,15 +587,11 @@ export default function TournamentPage({ params }: TournamentPageProps) {
                     </div>
                     <div>
                       <p className="text-gray-500">優勝報酬</p>
-                      <p className="font-semibold text-yellow-600">
-                        +{rewards.championReward}pt
-                      </p>
+                      <p className="font-semibold text-yellow-600">+{rewards.championReward}pt</p>
                     </div>
                     <div>
                       <p className="text-gray-500">勝利報酬</p>
-                      <p className="font-semibold text-green-600">
-                        +{rewards.winReward}pt/勝
-                      </p>
+                      <p className="font-semibold text-green-600">+{rewards.winReward}pt/勝</p>
                     </div>
                   </div>
 
@@ -641,30 +635,33 @@ export default function TournamentPage({ params }: TournamentPageProps) {
               <h2 className="text-lg font-bold text-gray-700 mb-4">過去の成績</h2>
               <div className="bg-white rounded-xl shadow-md p-4">
                 <div className="space-y-2">
-                  {tournamentHistory.slice(-5).reverse().map((history) => (
-                    <div
-                      key={history.id}
-                      className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                            history.isChampion
-                              ? "bg-yellow-100 text-yellow-600"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {history.isChampion ? "🏆" : "−"}
-                        </span>
-                        <span className="font-medium">
-                          {TOURNAMENT_TYPE_NAMES_JA[history.type]}
-                        </span>
+                  {tournamentHistory
+                    .slice(-5)
+                    .reverse()
+                    .map((history) => (
+                      <div
+                        key={history.id}
+                        className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                              history.isChampion
+                                ? "bg-yellow-100 text-yellow-600"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {history.isChampion ? "🏆" : "−"}
+                          </span>
+                          <span className="font-medium">
+                            {TOURNAMENT_TYPE_NAMES_JA[history.type]}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {history.wins}勝{history.losses}敗 | +{history.rewardEarned}pt
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {history.wins}勝{history.losses}敗 | +{history.rewardEarned}pt
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             </div>

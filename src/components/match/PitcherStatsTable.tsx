@@ -11,10 +11,7 @@ interface PitcherStatsTableProps {
 /**
  * 投手成績表示コンポーネント
  */
-export function PitcherStatsTable({
-  pitcher,
-  isWinner,
-}: PitcherStatsTableProps) {
+export function PitcherStatsTable({ pitcher, isWinner }: PitcherStatsTableProps) {
   // 防御率を計算（自責点 × 9 / 投球回）
   const era =
     pitcher.inningsPitched > 0
@@ -32,9 +29,7 @@ export function PitcherStatsTable({
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="bg-gray-100">
-            <th className="border border-gray-300 px-3 py-2 text-left min-w-[120px]">
-              投手
-            </th>
+            <th className="border border-gray-300 px-3 py-2 text-left min-w-[120px]">投手</th>
             <th className="border border-gray-300 px-2 py-2 text-center" title="投球回">
               回
             </th>
@@ -83,47 +78,31 @@ export function PitcherStatsTable({
                 </span>
               )}
               {!isWinner && (
-                <span className="ml-2 text-xs bg-red-100 text-red-700 px-1 py-0.5 rounded">
-                  負
-                </span>
+                <span className="ml-2 text-xs bg-red-100 text-red-700 px-1 py-0.5 rounded">負</span>
               )}
             </td>
             <td className="border border-gray-300 px-2 py-2 text-center font-mono">
               {pitcher.inningsPitchedDisplay}
             </td>
-            <td className="border border-gray-300 px-2 py-2 text-center">
-              {pitcher.battersFaced}
-            </td>
-            <td className="border border-gray-300 px-2 py-2 text-center">
-              {pitcher.pitchCount}
-            </td>
-            <td className="border border-gray-300 px-2 py-2 text-center">
-              {pitcher.hits}
-            </td>
+            <td className="border border-gray-300 px-2 py-2 text-center">{pitcher.battersFaced}</td>
+            <td className="border border-gray-300 px-2 py-2 text-center">{pitcher.pitchCount}</td>
+            <td className="border border-gray-300 px-2 py-2 text-center">{pitcher.hits}</td>
             <td className="border border-gray-300 px-2 py-2 text-center text-yellow-600 font-bold">
               {pitcher.homeruns}
             </td>
             <td className="border border-gray-300 px-2 py-2 text-center text-blue-600 font-bold">
               {pitcher.strikeouts}
             </td>
-            <td className="border border-gray-300 px-2 py-2 text-center">
-              {pitcher.walks}
-            </td>
-            <td className="border border-gray-300 px-2 py-2 text-center">
-              {pitcher.hitByPitch}
-            </td>
-            <td className="border border-gray-300 px-2 py-2 text-center">
-              {pitcher.wildPitches}
-            </td>
+            <td className="border border-gray-300 px-2 py-2 text-center">{pitcher.walks}</td>
+            <td className="border border-gray-300 px-2 py-2 text-center">{pitcher.hitByPitch}</td>
+            <td className="border border-gray-300 px-2 py-2 text-center">{pitcher.wildPitches}</td>
             <td className="border border-gray-300 px-2 py-2 text-center text-red-600 font-bold">
               {pitcher.runs}
             </td>
             <td className="border border-gray-300 px-2 py-2 text-center text-red-600">
               {pitcher.earnedRuns}
             </td>
-            <td className="border border-gray-300 px-2 py-2 text-center font-mono">
-              {era}
-            </td>
+            <td className="border border-gray-300 px-2 py-2 text-center font-mono">{era}</td>
           </tr>
         </tbody>
       </table>

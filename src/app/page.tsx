@@ -132,10 +132,7 @@ export default function Home() {
 
             {/* その他のリンク */}
             <div className="text-center">
-              <Link
-                href="/pokemon-test"
-                className="text-blue-600 hover:underline text-sm"
-              >
+              <Link href="/pokemon-test" className="text-blue-600 hover:underline text-sm">
                 ポケモンテスト
               </Link>
             </div>
@@ -160,9 +157,7 @@ export default function Home() {
 
             {/* 案内 */}
             <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-              <p className="text-gray-600 mb-4">
-                ログインするとチームを作成・管理できます
-              </p>
+              <p className="text-gray-600 mb-4">ログインするとチームを作成・管理できます</p>
               <Link
                 href="/team/create"
                 className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-all"

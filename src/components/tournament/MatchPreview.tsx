@@ -129,8 +129,14 @@ export function MatchPreview({
       {/* ラウンド表示 */}
       <div className="text-center mb-6">
         <span className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-bold">
-          {match.round === 1 ? "1回戦" : match.round === 2 ? "2回戦" : match.round === 3 ? "準決勝" : "決勝"}
-          {" "}第{match.matchNumber}試合
+          {match.round === 1
+            ? "1回戦"
+            : match.round === 2
+              ? "2回戦"
+              : match.round === 3
+                ? "準決勝"
+                : "決勝"}{" "}
+          第{match.matchNumber}試合
         </span>
       </div>
 

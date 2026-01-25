@@ -51,11 +51,7 @@ interface TournamentState {
 
   // アクション
   startTournament: (bracket: TournamentBracket, teamId: string) => void;
-  recordMatchResult: (
-    matchId: string,
-    playerWon: boolean,
-    matchResult: MatchResult
-  ) => void;
+  recordMatchResult: (matchId: string, playerWon: boolean, matchResult: MatchResult) => void;
   completeTournament: (isChampion: boolean, rewardEarned: number) => void;
   clearCurrentTournament: () => void;
   unlockTournament: (type: TournamentType) => void;
@@ -164,9 +160,7 @@ export const useTournamentStore = create<TournamentState>()(
 
       hasChampionship: (type) => {
         const state = get();
-        return state.tournamentHistory.some(
-          (h) => h.type === type && h.isChampion
-        );
+        return state.tournamentHistory.some((h) => h.type === type && h.isChampion);
       },
     }),
     {
@@ -287,10 +281,7 @@ function updateBracketWithResult(
 /**
  * 試合IDから試合を検索
  */
-function findMatchById(
-  bracket: TournamentBracket,
-  matchId: string
-): TournamentMatch | null {
+function findMatchById(bracket: TournamentBracket, matchId: string): TournamentMatch | null {
   for (const round of bracket.rounds) {
     for (const match of round) {
       if (match.id === matchId) return match;

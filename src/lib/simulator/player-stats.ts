@@ -11,7 +11,10 @@ import type {
   PitcherStats,
   InningScore,
   OpponentMember,
+  BasesState,
+  BaseRunner,
 } from "@/types/match";
+import { GROUNDOUT_RESULTS, FLYOUT_RESULTS, isGroundout, isFlyout } from "@/types/match";
 import { calculateFielderAbility } from "@/lib/calculator/fielder";
 import { calculatePitcherAbility } from "@/lib/calculator/pitcher";
 import { POSITION_NAMES_JA } from "@/types/position";
@@ -34,6 +37,57 @@ function weightedRandom<T>(options: { value: T; weight: number }[]): T {
 }
 
 /**
+ * ランダムにゴロアウトのポジションを選択
+ */
+function randomGroundout(): AtBatResult {
+  // ゴロの確率分布（内野ゴロが多い）
+  const weights = [
+    { value: GROUNDOUT_RESULTS[0], weight: 0.05 }, // 投ゴロ
+    { value: GROUNDOUT_RESULTS[1], weight: 0.02 }, // 捕ゴロ
+    { value: GROUNDOUT_RESULTS[2], weight: 0.15 }, // 一ゴロ
+    { value: GROUNDOUT_RESULTS[3], weight: 0.25 }, // 二ゴロ
+    { value: GROUNDOUT_RESULTS[4], weight: 0.18 }, // 三ゴロ
+    { value: GROUNDOUT_RESULTS[5], weight: 0.35 }, // 遊ゴロ
+  ];
+  return weightedRandom(weights);
+}
+
+/**
+ * ランダムにフライアウトのポジションを選択
+ */
+function randomFlyout(): AtBatResult {
+  // フライの確率分布（外野フライが多い）
+  const weights = [
+    { value: FLYOUT_RESULTS[0], weight: 0.02 }, // 投フライ
+    { value: FLYOUT_RESULTS[1], weight: 0.05 }, // 捕フライ
+    { value: FLYOUT_RESULTS[2], weight: 0.08 }, // 一フライ
+    { value: FLYOUT_RESULTS[3], weight: 0.1 }, // 二フライ
+    { value: FLYOUT_RESULTS[4], weight: 0.08 }, // 三フライ
+    { value: FLYOUT_RESULTS[5], weight: 0.07 }, // 遊フライ
+    { value: FLYOUT_RESULTS[6], weight: 0.2 }, // 左フライ
+    { value: FLYOUT_RESULTS[7], weight: 0.25 }, // 中フライ
+    { value: FLYOUT_RESULTS[8], weight: 0.15 }, // 右フライ
+  ];
+  return weightedRandom(weights);
+}
+
+/** 内部用の打席結果タイプ（ゴロ・フライを抽象化） */
+type InternalAtBatResult =
+  | "single"
+  | "double"
+  | "triple"
+  | "homerun"
+  | "strikeout"
+  | "groundout"
+  | "flyout"
+  | "walk"
+  | "hitByPitch"
+  | "sacrifice"
+  | "sacrificeFly"
+  | "error"
+  | "fieldersChoice";
+
+/**
  * 打者の能力値に基づいて打席結果の確率分布を計算
  */
 function getAtBatResultDistribution(
@@ -41,12 +95,9 @@ function getAtBatResultDistribution(
   pitcherPower: number,
   outs: number,
   runnersOnBase: number
-): { value: AtBatResult; weight: number }[] {
+): { value: InternalAtBatResult; weight: number }[] {
   // 打者優位度（0.5〜1.5）
-  const advantage = Math.max(
-    0.5,
-    Math.min(1.5, batterPower / (pitcherPower || 1))
-  );
+  const advantage = Math.max(0.5, Math.min(1.5, batterPower / (pitcherPower || 1)));
 
   // 基本確率（打者優位度で調整）
   const hitRate = 0.25 * advantage;
@@ -82,6 +133,19 @@ function getAtBatResultDistribution(
 }
 
 /**
+ * 内部結果を実際のAtBatResultに変換（ゴロ・フライをポジション別に展開）
+ */
+function convertToAtBatResult(internalResult: InternalAtBatResult): AtBatResult {
+  if (internalResult === "groundout") {
+    return randomGroundout();
+  }
+  if (internalResult === "flyout") {
+    return randomFlyout();
+  }
+  return internalResult;
+}
+
+/**
  * 打席結果がヒットかどうか判定
  */
 function isHit(result: AtBatResult): boolean {
@@ -99,14 +163,28 @@ function countsAsAtBat(result: AtBatResult): boolean {
  * 打席結果がアウトになるか判定
  */
 function isOut(result: AtBatResult): boolean {
-  return [
-    "strikeout",
-    "groundout",
-    "flyout",
-    "fieldersChoice",
-    "sacrifice",
-    "sacrificeFly",
-  ].includes(result);
+  if (isGroundout(result) || isFlyout(result)) {
+    return true;
+  }
+  return ["strikeout", "fieldersChoice", "sacrifice", "sacrificeFly"].includes(result);
+}
+
+/**
+ * 塁上のランナー数をカウント
+ */
+function countRunners(bases: BasesState): number {
+  return (bases.first ? 1 : 0) + (bases.second ? 1 : 0) + (bases.third ? 1 : 0);
+}
+
+/**
+ * BasesStateをディープコピー
+ */
+function copyBases(bases: BasesState): BasesState {
+  return {
+    first: bases.first ? { ...bases.first } : null,
+    second: bases.second ? { ...bases.second } : null,
+    third: bases.third ? { ...bases.third } : null,
+  };
 }
 
 /** イニングシミュレーション結果 */
@@ -117,11 +195,18 @@ interface InningSimulationResult {
   atBatsByBatter: AtBat[][];
 }
 
+/** 打者データ（シミュレーション用） */
+interface BatterData {
+  power: number;
+  name: string;
+  spriteUrl: string | null;
+}
+
 /**
  * 1イニングをシミュレート（自然な野球ルール）
  */
 function simulateInning(
-  batterData: { power: number }[],
+  batterData: BatterData[],
   pitcherPower: number,
   startBatterIndex: number,
   inningNumber: number
@@ -130,8 +215,9 @@ function simulateInning(
   let runs = 0;
   let hits = 0;
   let errors = 0;
-  let runnersOnBase = 0; // 簡易的な走者管理（0-3）
+  let bases: BasesState = { first: null, second: null, third: null };
   let currentBatterIndex = startBatterIndex;
+  let atBatOrderInHalfInning = 0; // ハーフイニング内の打席順序
 
   const atBatsByBatter: AtBat[][] = batterData.map(() => []);
 
@@ -139,6 +225,11 @@ function simulateInning(
   while (outs < 3) {
     const batterIndex = currentBatterIndex % batterData.length;
     const batter = batterData[batterIndex];
+    const runnersOnBase = countRunners(bases);
+
+    // 打席前の状態を保存
+    const outsBeforeAtBat = outs;
+    const basesBeforeAtBat = copyBases(bases);
 
     // 打席結果の確率分布を取得（状況に応じて犠打・犠飛の確率を調整）
     const distribution = getAtBatResultDistribution(
@@ -148,8 +239,10 @@ function simulateInning(
       runnersOnBase
     );
 
-    // 打席結果を生成
-    const result = weightedRandom(distribution);
+    // 打席結果を生成（内部結果）
+    const internalResult = weightedRandom(distribution);
+    // ポジション別に変換
+    const result = convertToAtBatResult(internalResult);
 
     // アウトカウント更新
     if (isOut(result)) {
@@ -159,72 +252,126 @@ function simulateInning(
     // 打点と得点計算
     let rbi = 0;
     let scoredRun = false;
+    const scoredRunners: BaseRunner[] = [];
+
+    // 現在の打者のランナー情報
+    const currentBatterRunner: BaseRunner = {
+      batterIndex,
+      name: batter.name,
+      spriteUrl: batter.spriteUrl,
+    };
 
     if (result === "homerun") {
       // ホームラン：打者＋走者全員得点
       hits++;
-      rbi = 1 + runnersOnBase;
+      if (bases.third) scoredRunners.push(bases.third);
+      if (bases.second) scoredRunners.push(bases.second);
+      if (bases.first) scoredRunners.push(bases.first);
+      scoredRunners.push(currentBatterRunner);
+      rbi = scoredRunners.length;
       runs += rbi;
       scoredRun = true;
-      runnersOnBase = 0;
+      bases = { first: null, second: null, third: null };
     } else if (isHit(result)) {
       hits++;
-      // ヒット：走者の進塁と得点
       if (result === "triple") {
-        // 三塁打：走者全員生還
-        rbi = runnersOnBase;
+        // 三塁打：走者全員生還、打者3塁へ
+        if (bases.third) scoredRunners.push(bases.third);
+        if (bases.second) scoredRunners.push(bases.second);
+        if (bases.first) scoredRunners.push(bases.first);
+        rbi = scoredRunners.length;
         runs += rbi;
-        runnersOnBase = 1;
+        bases = { first: null, second: null, third: currentBatterRunner };
       } else if (result === "double") {
-        // 二塁打：二塁以降の走者生還
-        const scoringRunners = Math.min(runnersOnBase, 2);
-        if (runnersOnBase > 0 && Math.random() < 0.7) {
-          rbi = scoringRunners;
-          runs += rbi;
-          runnersOnBase = Math.max(0, runnersOnBase - scoringRunners) + 1;
-        } else {
-          runnersOnBase = Math.min(3, runnersOnBase + 1);
+        // 二塁打：3塁ランナーは必ず生還、2塁ランナーは高確率で生還、1塁ランナーは3塁へ
+        if (bases.third) {
+          scoredRunners.push(bases.third);
+          runs++;
         }
+        if (bases.second && Math.random() < 0.85) {
+          scoredRunners.push(bases.second);
+          runs++;
+        }
+        const newThird =
+          bases.second && !scoredRunners.includes(bases.second) ? bases.second : bases.first;
+        bases = {
+          first: null,
+          second: currentBatterRunner,
+          third: newThird || null,
+        };
+        rbi = scoredRunners.length;
       } else {
         // 単打
-        if (runnersOnBase > 0 && Math.random() < 0.35) {
-          rbi = 1;
-          runs += 1;
-          runnersOnBase = Math.min(3, runnersOnBase); // 走者が1人減って打者が出塁
-        } else {
-          runnersOnBase = Math.min(3, runnersOnBase + 1);
+        if (bases.third && Math.random() < 0.9) {
+          scoredRunners.push(bases.third);
+          runs++;
         }
+        const newThird = bases.second && Math.random() < 0.4 ? null : bases.second;
+        if (bases.second && !newThird) {
+          scoredRunners.push(bases.second);
+          runs++;
+        }
+        bases = {
+          first: currentBatterRunner,
+          second: bases.first,
+          third: newThird,
+        };
+        rbi = scoredRunners.length;
       }
     } else if (result === "walk" || result === "hitByPitch") {
-      // 四球・死球：満塁なら押し出し
-      if (runnersOnBase >= 3) {
+      // 四球・死球：押し出し（満塁時のみ得点）
+      if (bases.first && bases.second && bases.third) {
+        scoredRunners.push(bases.third);
         rbi = 1;
         runs++;
       }
-      runnersOnBase = Math.min(3, runnersOnBase + 1);
-    } else if (result === "sacrificeFly" && runnersOnBase > 0) {
+      bases = {
+        first: currentBatterRunner,
+        second: bases.first || bases.second,
+        third: bases.first ? bases.second || bases.third : bases.third,
+      };
+    } else if (result === "sacrificeFly" && bases.third) {
       // 犠牲フライ：三塁走者が生還
+      scoredRunners.push(bases.third);
       rbi = 1;
       runs++;
-      runnersOnBase = Math.max(0, runnersOnBase - 1);
+      bases = {
+        ...bases,
+        third: null,
+      };
     } else if (result === "sacrifice" && runnersOnBase > 0) {
-      // 犠打：走者進塁（得点なし、走者数は変わらない）
-      // 三塁に走者がいれば得点の可能性
-      if (runnersOnBase >= 2 && Math.random() < 0.3) {
+      // 犠打：走者1塁進塁
+      if (bases.third) {
+        scoredRunners.push(bases.third);
         rbi = 1;
         runs++;
-        runnersOnBase = Math.max(0, runnersOnBase - 1);
       }
+      bases = {
+        first: null,
+        second: bases.first,
+        third: bases.second,
+      };
     } else if (result === "error") {
       errors++;
-      // エラー：出塁（ヒットと同様の扱い）
-      if (runnersOnBase > 0 && Math.random() < 0.3) {
+      // エラー：出塁、ランナーも進塁
+      if (bases.third && Math.random() < 0.5) {
+        scoredRunners.push(bases.third);
         runs++;
       }
-      runnersOnBase = Math.min(3, runnersOnBase + 1);
-    } else if (result === "fieldersChoice") {
-      // フィルダースチョイス：走者アウトで打者出塁
-      // 走者数は変わらない（1人アウト、1人出塁）
+      bases = {
+        first: currentBatterRunner,
+        second: bases.first,
+        third:
+          bases.second ||
+          (bases.third && !scoredRunners.includes(bases.third) ? bases.third : null),
+      };
+    } else if (result === "fieldersChoice" && bases.first) {
+      // フィルダースチョイス：先頭走者アウトで打者出塁
+      bases = {
+        first: currentBatterRunner,
+        second: bases.second,
+        third: bases.third,
+      };
     }
 
     atBatsByBatter[batterIndex].push({
@@ -235,8 +382,20 @@ function simulateInning(
       run: scoredRun,
       stolenBase: false,
       caughtStealing: false,
+      outsBeforeAtBat,
+      outsAfterAtBat: outs,
+      basesBeforeAtBat,
+      basesAfterAtBat: copyBases(bases),
+      batter: {
+        index: batterIndex,
+        name: batter.name,
+        spriteUrl: batter.spriteUrl,
+      },
+      scoredRunners,
+      atBatOrderInHalfInning,
     });
 
+    atBatOrderInHalfInning++;
     currentBatterIndex++;
 
     // 無限ループ防止
@@ -275,14 +434,22 @@ export function simulateGame(
   let teamATotal = 0;
   let teamBTotal = 0;
 
+  // 打者データを作成（名前とスプライトURL含む）
+  const teamABatterData: BatterData[] = teamABatters.map((b) => ({
+    power: b.power,
+    name: b.member.pokemon.nameJa || b.member.pokemon.name,
+    spriteUrl: b.member.pokemon.sprites.frontDefault || null,
+  }));
+
+  const teamBBatterData: BatterData[] = teamBBatters.map((b) => ({
+    power: b.power,
+    name: b.member.name,
+    spriteUrl: b.member.spriteUrl ?? null,
+  }));
+
   for (let i = 1; i <= inningCount; i++) {
     // 先攻（teamB）の攻撃（表）
-    const teamBResult = simulateInning(
-      teamBBatters.map((b) => ({ power: b.power })),
-      teamAPitcherPower,
-      teamBBatterIndex,
-      i
-    );
+    const teamBResult = simulateInning(teamBBatterData, teamAPitcherPower, teamBBatterIndex, i);
     teamBBatterIndex = teamBResult.nextBatterIndex;
 
     // teamBの打席結果をマージ
@@ -303,12 +470,7 @@ export function simulateGame(
       teamAResult = { runs: 0, hits: 0, errors: 0, atBatsByBatter: [] };
     } else {
       // 後攻（teamA）の攻撃（裏）
-      const result = simulateInning(
-        teamABatters.map((b) => ({ power: b.power })),
-        teamBPitcherPower,
-        teamABatterIndex,
-        i
-      );
+      const result = simulateInning(teamABatterData, teamBPitcherPower, teamABatterIndex, i);
       teamABatterIndex = result.nextBatterIndex;
       teamAResult = result.result;
 
@@ -357,9 +519,7 @@ function aggregateBatterStats(
   const walks = atBats.filter((ab) => ab.result === "walk").length;
   const hitByPitch = atBats.filter((ab) => ab.result === "hitByPitch").length;
   const sacrificeHits = atBats.filter((ab) => ab.result === "sacrifice").length;
-  const sacrificeFlies = atBats.filter(
-    (ab) => ab.result === "sacrificeFly"
-  ).length;
+  const sacrificeFlies = atBats.filter((ab) => ab.result === "sacrificeFly").length;
   const stolenBases = atBats.filter((ab) => ab.stolenBase).length;
   const caughtStealing = atBats.filter((ab) => ab.caughtStealing).length;
   const errorsCount = atBats.filter((ab) => ab.result === "error").length;
@@ -402,8 +562,7 @@ export function generateBatterStats(
 
   return batters.map((batter, index) => {
     const position =
-      POSITION_NAMES_JA[batter.position as keyof typeof POSITION_NAMES_JA] ||
-      batter.position;
+      POSITION_NAMES_JA[batter.position as keyof typeof POSITION_NAMES_JA] || batter.position;
     return aggregateBatterStats(
       batter.id,
       batter.pokemon.nameJa || batter.pokemon.name,
@@ -446,21 +605,12 @@ export function generatePitcherStats(
   const inningsPitchedDisplay = `${inningsPitched}.0`;
 
   // 打者成績から投手成績を集計
-  const battersFaced = opponentBatterStats.reduce(
-    (sum, b) => sum + b.plateAppearances,
-    0
-  );
+  const battersFaced = opponentBatterStats.reduce((sum, b) => sum + b.plateAppearances, 0);
   const hits = opponentBatterStats.reduce((sum, b) => sum + b.hits, 0);
   const homeruns = opponentBatterStats.reduce((sum, b) => sum + b.homeruns, 0);
-  const strikeouts = opponentBatterStats.reduce(
-    (sum, b) => sum + b.strikeouts,
-    0
-  );
+  const strikeouts = opponentBatterStats.reduce((sum, b) => sum + b.strikeouts, 0);
   const walks = opponentBatterStats.reduce((sum, b) => sum + b.walks, 0);
-  const hitByPitch = opponentBatterStats.reduce(
-    (sum, b) => sum + b.hitByPitch,
-    0
-  );
+  const hitByPitch = opponentBatterStats.reduce((sum, b) => sum + b.hitByPitch, 0);
 
   // 失点はイニングスコアから集計（相手チームの得点）
   const runs = innings.reduce((sum, i) => sum + i.teamBScore, 0);
@@ -505,10 +655,7 @@ export function generateOpponentPitcherStats(
   const inningsPitched = innings.filter((i) => !i.teamASkipped).length;
 
   // 打者成績から投手成績を集計
-  const battersFaced = teamABatterStats.reduce(
-    (sum, b) => sum + b.plateAppearances,
-    0
-  );
+  const battersFaced = teamABatterStats.reduce((sum, b) => sum + b.plateAppearances, 0);
   const hits = teamABatterStats.reduce((sum, b) => sum + b.hits, 0);
   const homeruns = teamABatterStats.reduce((sum, b) => sum + b.homeruns, 0);
   const strikeouts = teamABatterStats.reduce((sum, b) => sum + b.strikeouts, 0);
@@ -553,7 +700,7 @@ export function getBatterPower(member: TeamMemberWithPokemon): number {
   if (member.position === "pitcher") {
     // 投手も野手能力で打撃力を計算（やや低めに設定）
     const ability = calculateFielderAbility(member.pokemon.stats);
-    return (ability.meet + ability.power) / 2 * 0.7;
+    return ((ability.meet + ability.power) / 2) * 0.7;
   } else {
     const ability = calculateFielderAbility(member.pokemon.stats);
     return (ability.meet + ability.power) / 2;
