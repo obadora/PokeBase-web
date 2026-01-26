@@ -280,7 +280,6 @@ function getResultColorClass(result: AtBat["result"], hasRbi: boolean): string {
       return "text-orange-500";
     case "sacrifice":
     case "sacrificeFly":
-    case "fieldersChoice":
       // 打点がある場合は強調表示
       return hasRbi ? "text-purple-600 font-bold" : "text-gray-600";
     default:

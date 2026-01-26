@@ -241,8 +241,6 @@ function getResultStyle(result: AtBatResult): string {
       return "bg-green-400 text-white";
     case "strikeout":
       return "bg-red-500 text-white";
-    case "fieldersChoice":
-      return "bg-gray-400 text-white";
     case "sacrifice":
     case "sacrificeFly":
       return "bg-purple-400 text-white";

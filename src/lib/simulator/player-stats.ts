@@ -84,8 +84,7 @@ type InternalAtBatResult =
   | "hitByPitch"
   | "sacrifice"
   | "sacrificeFly"
-  | "error"
-  | "fieldersChoice";
+  | "error";
 
 /**
  * 打者の能力値に基づいて打席結果の確率分布を計算
@@ -94,6 +93,7 @@ function getAtBatResultDistribution(
   batterPower: number,
   pitcherPower: number,
   outs: number,
+  hasRunnerOnThird: boolean,
   runnersOnBase: number
 ): { value: InternalAtBatResult; weight: number }[] {
   // 打者優位度（0.5〜1.5）
@@ -107,10 +107,13 @@ function getAtBatResultDistribution(
   const walkRate = 0.08 + (advantage - 1) * 0.02;
   const strikeoutRate = 0.2 / advantage;
 
-  // 犠打・犠飛は状況に応じて（2アウト未満かつ走者ありの時のみ）
+  // 犠打は2アウト未満かつ走者ありの時のみ
   const canSacrifice = outs < 2 && runnersOnBase > 0;
   const sacrificeWeight = canSacrifice ? 0.02 : 0;
-  const sacrificeFlyWeight = canSacrifice ? 0.02 : 0;
+
+  // 犠飛は2アウト未満かつ3塁ランナーありの時のみ
+  const canSacrificeFly = outs < 2 && hasRunnerOnThird;
+  const sacrificeFlyWeight = canSacrificeFly ? 0.02 : 0;
 
   return [
     {
@@ -121,14 +124,13 @@ function getAtBatResultDistribution(
     { value: "triple", weight: tripleRate },
     { value: "homerun", weight: homerunRate },
     { value: "strikeout", weight: strikeoutRate },
-    { value: "groundout", weight: 0.25 },
-    { value: "flyout", weight: 0.2 },
+    { value: "groundout", weight: 0.27 },
+    { value: "flyout", weight: 0.22 },
     { value: "walk", weight: walkRate },
     { value: "hitByPitch", weight: 0.01 },
     { value: "sacrifice", weight: sacrificeWeight },
     { value: "sacrificeFly", weight: sacrificeFlyWeight },
     { value: "error", weight: 0.02 },
-    { value: "fieldersChoice", weight: 0.02 },
   ];
 }
 
@@ -166,7 +168,7 @@ function isOut(result: AtBatResult): boolean {
   if (isGroundout(result) || isFlyout(result)) {
     return true;
   }
-  return ["strikeout", "fieldersChoice", "sacrifice", "sacrificeFly"].includes(result);
+  return ["strikeout", "sacrifice", "sacrificeFly"].includes(result);
 }
 
 /**
@@ -236,6 +238,7 @@ function simulateInning(
       batter.power,
       pitcherPower,
       outs,
+      bases.third !== null,
       runnersOnBase
     );
 
@@ -301,20 +304,21 @@ function simulateInning(
         };
         rbi = scoredRunners.length;
       } else {
-        // 単打
-        if (bases.third && Math.random() < 0.9) {
+        // 単打：3塁ランナーは必ず得点
+        if (bases.third) {
           scoredRunners.push(bases.third);
           runs++;
         }
-        const newThird = bases.second && Math.random() < 0.4 ? null : bases.second;
-        if (bases.second && !newThird) {
+        // 2塁ランナーは40%で得点、60%で3塁へ
+        const secondRunnerScores = bases.second && Math.random() < 0.4;
+        if (bases.second && secondRunnerScores) {
           scoredRunners.push(bases.second);
           runs++;
         }
         bases = {
           first: currentBatterRunner,
           second: bases.first,
-          third: newThird,
+          third: bases.second && !secondRunnerScores ? bases.second : null,
         };
         rbi = scoredRunners.length;
       }
@@ -364,13 +368,6 @@ function simulateInning(
         third:
           bases.second ||
           (bases.third && !scoredRunners.includes(bases.third) ? bases.third : null),
-      };
-    } else if (result === "fieldersChoice" && bases.first) {
-      // フィルダースチョイス：先頭走者アウトで打者出塁
-      bases = {
-        first: currentBatterRunner,
-        second: bases.second,
-        third: bases.third,
       };
     }
 

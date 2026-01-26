@@ -109,8 +109,7 @@ export type AtBatResult =
   | "hitByPitch" // 死球
   | "sacrifice" // 犠打
   | "sacrificeFly" // 犠飛
-  | "error" // 失策
-  | "fieldersChoice"; // 野選
+  | "error"; // 失策
 
 /** 打席結果の日本語表示 */
 export const AT_BAT_RESULT_LABELS: Record<AtBatResult, string> = {
@@ -141,7 +140,6 @@ export const AT_BAT_RESULT_LABELS: Record<AtBatResult, string> = {
   sacrifice: "犠打",
   sacrificeFly: "犠飛",
   error: "失策",
-  fieldersChoice: "野選",
 };
 
 /** ゴロアウトの結果一覧 */
