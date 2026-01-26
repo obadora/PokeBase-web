@@ -90,7 +90,7 @@ export function MemberAssignmentModal({
   const currentMemberAbilities = useMemo(() => {
     if (!currentMember) return null;
     return calculateMemberAbilities(currentMember);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMember, position]);
 
   // 控えメンバーの適性スコアと能力値を計算
@@ -102,7 +102,7 @@ export function MemberAssignmentModal({
         ...abilities,
       };
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableMembers, position]);
 
   // 適性順でソート（適性あり → スコア降順）
@@ -232,42 +232,60 @@ export function MemberAssignmentModal({
                   <div className="grid grid-cols-4 gap-1 text-[10px]">
                     <div className="text-center">
                       <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.velocity}</div>
-                      <div className="font-semibold text-gray-700">{currentMemberAbilities.pitcherAbility.velocity}</div>
+                      <div className="font-semibold text-gray-700">
+                        {currentMemberAbilities.pitcherAbility.velocity}
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.control}</div>
-                      <div className="font-semibold text-gray-700">{currentMemberAbilities.pitcherAbility.control}</div>
+                      <div className="font-semibold text-gray-700">
+                        {currentMemberAbilities.pitcherAbility.control}
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.stamina}</div>
-                      <div className="font-semibold text-gray-700">{currentMemberAbilities.pitcherAbility.stamina}</div>
+                      <div className="font-semibold text-gray-700">
+                        {currentMemberAbilities.pitcherAbility.stamina}
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.breaking}</div>
-                      <div className="font-semibold text-gray-700">{currentMemberAbilities.pitcherAbility.breaking}</div>
+                      <div className="font-semibold text-gray-700">
+                        {currentMemberAbilities.pitcherAbility.breaking}
+                      </div>
                     </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-5 gap-1 text-[10px]">
                     <div className="text-center">
                       <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.meet}</div>
-                      <div className="font-semibold text-gray-700">{currentMemberAbilities.fielderAbility.meet}</div>
+                      <div className="font-semibold text-gray-700">
+                        {currentMemberAbilities.fielderAbility.meet}
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.power}</div>
-                      <div className="font-semibold text-gray-700">{currentMemberAbilities.fielderAbility.power}</div>
+                      <div className="font-semibold text-gray-700">
+                        {currentMemberAbilities.fielderAbility.power}
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.speed}</div>
-                      <div className="font-semibold text-gray-700">{currentMemberAbilities.fielderAbility.speed}</div>
+                      <div className="font-semibold text-gray-700">
+                        {currentMemberAbilities.fielderAbility.speed}
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.arm}</div>
-                      <div className="font-semibold text-gray-700">{currentMemberAbilities.fielderAbility.arm}</div>
+                      <div className="font-semibold text-gray-700">
+                        {currentMemberAbilities.fielderAbility.arm}
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.defense}</div>
-                      <div className="font-semibold text-gray-700">{currentMemberAbilities.fielderAbility.defense}</div>
+                      <div className="font-semibold text-gray-700">
+                        {currentMemberAbilities.fielderAbility.defense}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -294,132 +312,148 @@ export function MemberAssignmentModal({
             <p className="text-center text-gray-400 py-4">配置可能なメンバーがいません</p>
           ) : (
             <div className="space-y-2">
-              {sortedMembers.map(({ member, fitness, isEligible, fielderAbility, pitcherAbility }) => (
-                <button
-                  key={member.id}
-                  type="button"
-                  onClick={() => {
-                    onAssign(member);
-                    onClose();
-                  }}
-                  className={`
+              {sortedMembers.map(
+                ({ member, fitness, isEligible, fielderAbility, pitcherAbility }) => (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => {
+                      onAssign(member);
+                      onClose();
+                    }}
+                    className={`
                     w-full p-3 rounded-lg border transition-all text-left
                     ${isEligible ? "border-green-300 hover:bg-green-50" : "border-gray-200 hover:bg-gray-50"}
                   `}
-                >
-                  <div className="flex items-center gap-3">
-                    {/* ポケモン画像 */}
-                    <div className="w-12 h-12 relative flex-shrink-0">
-                      {member.pokemon.sprites.frontDefault && (
-                        <Image
-                          src={member.pokemon.sprites.frontDefault}
-                          alt={member.pokemon.nameJa || member.pokemon.name}
-                          fill
-                          sizes="48px"
-                          className="object-contain"
-                        />
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* ポケモン画像 */}
+                      <div className="w-12 h-12 relative flex-shrink-0">
+                        {member.pokemon.sprites.frontDefault && (
+                          <Image
+                            src={member.pokemon.sprites.frontDefault}
+                            alt={member.pokemon.nameJa || member.pokemon.name}
+                            fill
+                            sizes="48px"
+                            className="object-contain"
+                          />
+                        )}
+                      </div>
+
+                      {/* メンバー情報 */}
+                      <div className="flex-grow min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-800 truncate">
+                            {member.pokemon.nameJa || member.pokemon.name}
+                          </span>
+                          <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 flex-shrink-0">
+                            {GRADE_NAMES_JA[member.grade]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {/* 適性スコア */}
+                          {fitness && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-gray-500">適性:</span>
+                              <span
+                                className={`text-xs font-semibold ${isEligible ? "text-green-600" : "text-gray-400"}`}
+                              >
+                                {fitness.score}点
+                              </span>
+                            </div>
+                          )}
+                          {/* 適性バッジ */}
+                          {isEligible && (
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                              適性あり
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 星表示 */}
+                      {fitness && (
+                        <div className="flex-shrink-0">
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: 5 }, (_, i) => (
+                              <span
+                                key={i}
+                                className="text-sm"
+                                style={{ opacity: i < fitness.stars ? 1 : 0.2 }}
+                              >
+                                ★
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
 
-                    {/* メンバー情報 */}
-                    <div className="flex-grow min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-800 truncate">
-                          {member.pokemon.nameJa || member.pokemon.name}
-                        </span>
-                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 flex-shrink-0">
-                          {GRADE_NAMES_JA[member.grade]}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {/* 適性スコア */}
-                        {fitness && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-500">適性:</span>
-                            <span
-                              className={`text-xs font-semibold ${isEligible ? "text-green-600" : "text-gray-400"}`}
-                            >
-                              {fitness.score}点
-                            </span>
+                    {/* 能力値表示 */}
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      {position === "pitcher" ? (
+                        // 投手ポジションの場合は投手能力を表示
+                        <div className="grid grid-cols-4 gap-1 text-[10px]">
+                          <div className="text-center">
+                            <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.velocity}</div>
+                            <div className="font-semibold text-gray-700">
+                              {pitcherAbility.velocity}
+                            </div>
                           </div>
-                        )}
-                        {/* 適性バッジ */}
-                        {isEligible && (
-                          <span className="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
-                            適性あり
-                          </span>
-                        )}
-                      </div>
+                          <div className="text-center">
+                            <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.control}</div>
+                            <div className="font-semibold text-gray-700">
+                              {pitcherAbility.control}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.stamina}</div>
+                            <div className="font-semibold text-gray-700">
+                              {pitcherAbility.stamina}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.breaking}</div>
+                            <div className="font-semibold text-gray-700">
+                              {pitcherAbility.breaking}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        // 野手ポジションの場合は野手能力を表示
+                        <div className="grid grid-cols-5 gap-1 text-[10px]">
+                          <div className="text-center">
+                            <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.meet}</div>
+                            <div className="font-semibold text-gray-700">{fielderAbility.meet}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.power}</div>
+                            <div className="font-semibold text-gray-700">
+                              {fielderAbility.power}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.speed}</div>
+                            <div className="font-semibold text-gray-700">
+                              {fielderAbility.speed}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.arm}</div>
+                            <div className="font-semibold text-gray-700">{fielderAbility.arm}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.defense}</div>
+                            <div className="font-semibold text-gray-700">
+                              {fielderAbility.defense}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-
-                    {/* 星表示 */}
-                    {fitness && (
-                      <div className="flex-shrink-0">
-                        <div className="flex gap-0.5">
-                          {Array.from({ length: 5 }, (_, i) => (
-                            <span
-                              key={i}
-                              className="text-sm"
-                              style={{ opacity: i < fitness.stars ? 1 : 0.2 }}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 能力値表示 */}
-                  <div className="mt-2 pt-2 border-t border-gray-100">
-                    {position === "pitcher" ? (
-                      // 投手ポジションの場合は投手能力を表示
-                      <div className="grid grid-cols-4 gap-1 text-[10px]">
-                        <div className="text-center">
-                          <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.velocity}</div>
-                          <div className="font-semibold text-gray-700">{pitcherAbility.velocity}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.control}</div>
-                          <div className="font-semibold text-gray-700">{pitcherAbility.control}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.stamina}</div>
-                          <div className="font-semibold text-gray-700">{pitcherAbility.stamina}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-gray-400">{PITCHER_ABILITY_NAMES_JA.breaking}</div>
-                          <div className="font-semibold text-gray-700">{pitcherAbility.breaking}</div>
-                        </div>
-                      </div>
-                    ) : (
-                      // 野手ポジションの場合は野手能力を表示
-                      <div className="grid grid-cols-5 gap-1 text-[10px]">
-                        <div className="text-center">
-                          <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.meet}</div>
-                          <div className="font-semibold text-gray-700">{fielderAbility.meet}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.power}</div>
-                          <div className="font-semibold text-gray-700">{fielderAbility.power}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.speed}</div>
-                          <div className="font-semibold text-gray-700">{fielderAbility.speed}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.arm}</div>
-                          <div className="font-semibold text-gray-700">{fielderAbility.arm}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-gray-400">{FIELDER_ABILITY_NAMES_JA.defense}</div>
-                          <div className="font-semibold text-gray-700">{fielderAbility.defense}</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                )
+              )}
             </div>
           )}
         </div>

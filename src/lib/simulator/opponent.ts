@@ -57,9 +57,7 @@ function randomSample<T>(array: T[], n: number): T[] {
  * 特定のタイプを持つポケモンを取得
  */
 function getPokemonByType(allPokemon: Pokemon[], typeName: string): Pokemon[] {
-  return allPokemon.filter((p) =>
-    p.types.some((t) => t.typeName === typeName)
-  );
+  return allPokemon.filter((p) => p.types.some((t) => t.typeName === typeName));
 }
 
 /**
@@ -87,9 +85,7 @@ export function generateOpponentTeam(
 
   // タイプのポケモンが9匹未満の場合は全ポケモンから補充
   if (typePokemon.length < 9) {
-    const otherPokemon = allPokemon.filter(
-      (p) => !typePokemon.some((tp) => tp.id === p.id)
-    );
+    const otherPokemon = allPokemon.filter((p) => !typePokemon.some((tp) => tp.id === p.id));
     typePokemon = [...typePokemon, ...randomSample(otherPokemon, 9 - typePokemon.length)];
   }
 
@@ -144,11 +140,7 @@ export function getDifficultyByRound(
 ): number {
   // 大会タイプによる基本難易度
   const baseDifficulty =
-    tournamentType === "national"
-      ? 1.2
-      : tournamentType === "regional"
-        ? 1.0
-        : 0.8;
+    tournamentType === "national" ? 1.2 : tournamentType === "regional" ? 1.0 : 0.8;
 
   // ラウンドが進むごとに難易度上昇
   const roundBonus = (round - 1) * 0.1;
@@ -159,10 +151,7 @@ export function getDifficultyByRound(
 /**
  * ランダムマッチ（練習試合）用の対戦相手を生成
  */
-export function generateRandomOpponent(
-  teamPower: number,
-  allPokemon: Pokemon[]
-): OpponentTeam {
+export function generateRandomOpponent(teamPower: number, allPokemon: Pokemon[]): OpponentTeam {
   // 練習試合は難易度にばらつきを持たせる
   const difficulty = 0.6 + Math.random() * 0.8; // 0.6〜1.4
   return generateOpponentTeam(teamPower, allPokemon, difficulty);

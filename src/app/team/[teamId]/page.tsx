@@ -13,7 +13,12 @@ import type { Team, TeamMemberWithPokemon, Grade } from "@/types/team";
 import type { Position } from "@/types/position";
 import { POSITION_NAMES_JA } from "@/types/position";
 import { GRADE_NAMES_JA } from "@/types/team";
-import { getReputationRank, getMemberLimit, getReputationStars, getPointsToNextRank } from "@/types/reputation";
+import {
+  getReputationRank,
+  getMemberLimit,
+  getReputationStars,
+  getPointsToNextRank,
+} from "@/types/reputation";
 import { getTeamById, getTeamMembers } from "@/lib/supabase/team";
 import { getAllPokemon } from "@/lib/services/pokemon-data";
 import { calculateFielderAbility, FIELDER_ABILITY_NAMES_JA } from "@/lib/calculator/fielder";
@@ -69,9 +74,7 @@ function MemberCard({
       </span>
       {/* ポジション or 学年 */}
       <span className="text-[10px] text-gray-500">
-        {showGrade
-          ? GRADE_NAMES_JA[member.grade]
-          : POSITION_NAMES_JA[member.position as Position]}
+        {showGrade ? GRADE_NAMES_JA[member.grade] : POSITION_NAMES_JA[member.position as Position]}
       </span>
     </button>
   );
@@ -189,8 +192,18 @@ function MemberDetailModal({
             onClick={onClose}
             className="p-2 hover:bg-gray-200 rounded-full transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -449,7 +462,8 @@ export default function TeamDetailPage({ params }: TeamDetailPageProps) {
             <div>
               <p className="text-sm text-gray-500">1年生部員数上限</p>
               <p className="font-bold text-gray-800">
-                {membersWithPokemon.filter((m) => m.grade === 1).length}/{getMemberLimit(team.reputation)}人
+                {membersWithPokemon.filter((m) => m.grade === 1).length}/
+                {getMemberLimit(team.reputation)}人
               </p>
             </div>
           </div>
@@ -590,7 +604,6 @@ export default function TeamDetailPage({ params }: TeamDetailPageProps) {
             </div>
           )}
         </div>
-
       </div>
 
       {/* メンバー詳細モーダル */}

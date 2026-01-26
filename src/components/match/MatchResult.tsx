@@ -62,21 +62,13 @@ export function MatchResultDisplay({
       {/* スコア表示 */}
       <div className="text-center mb-4">
         <div className="flex items-center justify-center gap-4 text-2xl font-bold">
-          <span className={isWin ? "text-green-600" : "text-gray-600"}>
-            {teamAName}
-          </span>
+          <span className={isWin ? "text-green-600" : "text-gray-600"}>{teamAName}</span>
           <span className="text-3xl">
-            <span className={isWin ? "text-green-600" : "text-gray-600"}>
-              {result.teamAScore}
-            </span>
+            <span className={isWin ? "text-green-600" : "text-gray-600"}>{result.teamAScore}</span>
             <span className="text-gray-400 mx-2">-</span>
-            <span className={!isWin ? "text-red-600" : "text-gray-600"}>
-              {result.teamBScore}
-            </span>
+            <span className={!isWin ? "text-red-600" : "text-gray-600"}>{result.teamBScore}</span>
           </span>
-          <span className={!isWin ? "text-red-600" : "text-gray-600"}>
-            {teamBName}
-          </span>
+          <span className={!isWin ? "text-red-600" : "text-gray-600"}>{teamBName}</span>
         </div>
       </div>
 
@@ -132,9 +124,7 @@ export function MatchResultDisplay({
           <div className="space-y-6">
             {result.teamAPitcher && (
               <div>
-                <h4 className="text-sm font-medium text-gray-600 mb-2">
-                  {teamAName} 投手
-                </h4>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">{teamAName} 投手</h4>
                 <PitcherStatsTable
                   pitcher={result.teamAPitcher}
                   teamName={teamAName}
@@ -144,9 +134,7 @@ export function MatchResultDisplay({
             )}
             {result.teamBPitcher && (
               <div>
-                <h4 className="text-sm font-medium text-gray-600 mb-2">
-                  {teamBName} 投手
-                </h4>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">{teamBName} 投手</h4>
                 <PitcherStatsTable
                   pitcher={result.teamBPitcher}
                   teamName={teamBName}
@@ -233,9 +221,7 @@ function SummaryTab({
                 <li key={index} className="flex items-start gap-2">
                   <HighlightIcon type={highlight.type} />
                   <span>
-                    <span className="font-medium text-gray-500">
-                      {highlight.inning}回:
-                    </span>{" "}
+                    <span className="font-medium text-gray-500">{highlight.inning}回:</span>{" "}
                     {highlight.description}
                   </span>
                 </li>

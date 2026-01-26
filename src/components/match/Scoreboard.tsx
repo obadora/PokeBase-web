@@ -32,9 +32,7 @@ export function Scoreboard({
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="bg-gray-100">
-            <th className="border border-gray-300 px-2 py-1 text-left min-w-[100px]">
-              チーム
-            </th>
+            <th className="border border-gray-300 px-2 py-1 text-left min-w-[100px]">チーム</th>
             {innings.map((inning) => (
               <th
                 key={inning.inning}

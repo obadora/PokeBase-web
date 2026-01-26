@@ -1,7 +1,7 @@
 "use client";
 
 import type { BatterStats, AtBat } from "@/types/match";
-import { AT_BAT_RESULT_LABELS as LABELS } from "@/types/match";
+import { AT_BAT_RESULT_LABELS as LABELS, isGroundout, isFlyout } from "@/types/match";
 
 interface BatterStatsTableProps {
   batters: BatterStats[];
@@ -13,10 +13,7 @@ interface BatterStatsTableProps {
  * 打者成績表示コンポーネント
  * 打席結果タイムラインと詳細統計を表示
  */
-export function BatterStatsTable({
-  batters,
-  innings,
-}: BatterStatsTableProps) {
+export function BatterStatsTable({ batters, innings }: BatterStatsTableProps) {
   return (
     <div className="space-y-4">
       {/* 打席結果タイムライン */}
@@ -30,10 +27,7 @@ export function BatterStatsTable({
                   打者
                 </th>
                 {Array.from({ length: innings }, (_, i) => (
-                  <th
-                    key={i}
-                    className="border border-gray-300 px-2 py-1 text-center min-w-[32px]"
-                  >
+                  <th key={i} className="border border-gray-300 px-2 py-1 text-center min-w-[32px]">
                     {i + 1}
                   </th>
                 ))}
@@ -45,9 +39,7 @@ export function BatterStatsTable({
                   <td className="border border-gray-300 px-2 py-1 font-medium sticky left-0 bg-white z-10">
                     <span className="text-gray-400 mr-1">{batter.battingOrder}</span>
                     {batter.playerName}
-                    <span className="text-gray-400 text-xs ml-1">
-                      ({batter.position})
-                    </span>
+                    <span className="text-gray-400 text-xs ml-1">({batter.position})</span>
                   </td>
                   {Array.from({ length: innings }, (_, inningIndex) => {
                     const atBatsInInning = batter.atBats.filter(
@@ -147,27 +139,19 @@ export function BatterStatsTable({
                   <td className="border border-gray-300 px-1 py-1 text-center font-bold text-green-600">
                     {batter.hits}
                   </td>
-                  <td className="border border-gray-300 px-1 py-1 text-center">
-                    {batter.doubles}
-                  </td>
-                  <td className="border border-gray-300 px-1 py-1 text-center">
-                    {batter.triples}
-                  </td>
+                  <td className="border border-gray-300 px-1 py-1 text-center">{batter.doubles}</td>
+                  <td className="border border-gray-300 px-1 py-1 text-center">{batter.triples}</td>
                   <td className="border border-gray-300 px-1 py-1 text-center font-bold text-yellow-600">
                     {batter.homeruns}
                   </td>
                   <td className="border border-gray-300 px-1 py-1 text-center font-bold">
                     {batter.rbi}
                   </td>
-                  <td className="border border-gray-300 px-1 py-1 text-center">
-                    {batter.runs}
-                  </td>
+                  <td className="border border-gray-300 px-1 py-1 text-center">{batter.runs}</td>
                   <td className="border border-gray-300 px-1 py-1 text-center text-red-500">
                     {batter.strikeouts}
                   </td>
-                  <td className="border border-gray-300 px-1 py-1 text-center">
-                    {batter.walks}
-                  </td>
+                  <td className="border border-gray-300 px-1 py-1 text-center">{batter.walks}</td>
                   <td className="border border-gray-300 px-1 py-1 text-center">
                     {batter.hitByPitch}
                   </td>
@@ -183,9 +167,7 @@ export function BatterStatsTable({
                   <td className="border border-gray-300 px-1 py-1 text-center">
                     {batter.caughtStealing}
                   </td>
-                  <td className="border border-gray-300 px-1 py-1 text-center">
-                    {batter.errors}
-                  </td>
+                  <td className="border border-gray-300 px-1 py-1 text-center">{batter.errors}</td>
                 </tr>
               ))}
               {/* 合計行 */}
@@ -296,14 +278,15 @@ function getResultColorClass(result: AtBat["result"], hasRbi: boolean): string {
       return "text-blue-500";
     case "error":
       return "text-orange-500";
-    case "groundout":
-    case "flyout":
     case "sacrifice":
     case "sacrificeFly":
-    case "fieldersChoice":
       // 打点がある場合は強調表示
       return hasRbi ? "text-purple-600 font-bold" : "text-gray-600";
     default:
+      // ゴロアウト・フライアウト
+      if (isGroundout(result) || isFlyout(result)) {
+        return hasRbi ? "text-purple-600 font-bold" : "text-gray-600";
+      }
       return "text-gray-600";
   }
 }
@@ -312,23 +295,8 @@ function getResultColorClass(result: AtBat["result"], hasRbi: boolean): string {
  * 打席結果のツールチップテキストを取得
  */
 function getResultTitle(atBat: AtBat): string {
-  const resultNames: Record<AtBat["result"], string> = {
-    single: "単打",
-    double: "二塁打",
-    triple: "三塁打",
-    homerun: "本塁打",
-    strikeout: "三振",
-    groundout: "ゴロアウト",
-    flyout: "フライアウト",
-    walk: "四球",
-    hitByPitch: "死球",
-    sacrifice: "犠打",
-    sacrificeFly: "犠飛",
-    error: "失策",
-    fieldersChoice: "野選",
-  };
-
-  let title = resultNames[atBat.result];
+  // AT_BAT_RESULT_LABELSを使用
+  let title = LABELS[atBat.result];
   if (atBat.rbi > 0) {
     title += ` (${atBat.rbi}打点)`;
   }

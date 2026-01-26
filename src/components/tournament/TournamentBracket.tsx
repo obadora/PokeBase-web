@@ -77,9 +77,7 @@ function MatchCard({ match, playerTeamName, isClickable, onClick }: MatchCardPro
         >
           {team1Display.name}
         </span>
-        {team1Display.isWinner && (
-          <span className="text-green-600 text-xs font-bold">WIN</span>
-        )}
+        {team1Display.isWinner && <span className="text-green-600 text-xs font-bold">WIN</span>}
       </div>
 
       {/* チーム2 */}
@@ -99,9 +97,7 @@ function MatchCard({ match, playerTeamName, isClickable, onClick }: MatchCardPro
         >
           {team2Display.name}
         </span>
-        {team2Display.isWinner && (
-          <span className="text-green-600 text-xs font-bold">WIN</span>
-        )}
+        {team2Display.isWinner && <span className="text-green-600 text-xs font-bold">WIN</span>}
       </div>
 
       {/* スコア */}
